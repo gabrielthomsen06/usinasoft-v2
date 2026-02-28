@@ -3,7 +3,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './components/ui/Toast';
 import { Layout } from './components/layout/Layout';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
 import { Pecas } from './pages/Pecas';
 import { Clientes } from './pages/Clientes';
 import { Ops } from './pages/Ops';
