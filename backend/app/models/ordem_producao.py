@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
@@ -38,10 +38,10 @@ class OrdemProducao(Base):
     )
     observacoes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.utcnow(), nullable=False
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.utcnow(), onupdate=lambda: datetime.utcnow(), nullable=False
+        DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="ordens_producao")

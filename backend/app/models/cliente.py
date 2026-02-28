@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import DateTime, String
@@ -24,10 +24,10 @@ class Cliente(Base):
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     endereco: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.utcnow(), nullable=False
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.utcnow(), onupdate=lambda: datetime.utcnow(), nullable=False
+        DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     pecas: Mapped[list["Peca"]] = relationship("Peca", back_populates="cliente")
