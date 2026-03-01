@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
@@ -11,8 +12,6 @@ from app.db.database import Base
 if TYPE_CHECKING:
     from app.models.cliente import Cliente
     from app.models.peca import Peca
-
-import enum
 
 
 class OrdemProducaoStatus(str, enum.Enum):
@@ -38,10 +37,10 @@ class OrdemProducao(Base):
     )
     observacoes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="ordens_producao")

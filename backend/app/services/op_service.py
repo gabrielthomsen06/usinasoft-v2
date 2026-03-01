@@ -20,14 +20,12 @@ async def get_op_by_id(db: AsyncSession, op_id: uuid.UUID) -> OrdemProducao:
     op = result.scalar_one_or_none()
     if not op:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Ordem de produção not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ordem de produção não encontrada"
         )
     return op
 
 
-async def get_op_by_codigo(
-    db: AsyncSession, codigo: str
-) -> Optional[OrdemProducao]:
+async def get_op_by_codigo(db: AsyncSession, codigo: str) -> Optional[OrdemProducao]:
     result = await db.execute(
         select(OrdemProducao)
         .where(OrdemProducao.codigo == codigo)
@@ -51,34 +49,31 @@ async def create_op(db: AsyncSession, data: OrdemProducaoCreate) -> OrdemProduca
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="OP with this codigo already exists",
+            detail="Já existe uma OP com este código",
         )
     op = OrdemProducao(**data.model_dump())
     db.add(op)
-    await db.flush()
+    await db.commit()
     await db.refresh(op)
-    # Reload with relationships
     return await get_op_by_id(db, op.id)
 
 
-async def update_op(
-    db: AsyncSession, op_id: uuid.UUID, data: OrdemProducaoUpdate
-) -> OrdemProducao:
+async def update_op(db: AsyncSession, op_id: uuid.UUID, data: OrdemProducaoUpdate) -> OrdemProducao:
     op = await get_op_by_id(db, op_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(op, field, value)
-    await db.flush()
+    await db.commit()
     return await get_op_by_id(db, op.id)
 
 
 async def delete_op(db: AsyncSession, op_id: uuid.UUID) -> None:
     op = await get_op_by_id(db, op_id)
     await db.delete(op)
-    await db.flush()
+    await db.commit()
 
 
 async def auto_update_op_status(db: AsyncSession, op_id: uuid.UUID) -> None:
-    """Recalculate and update OP status based on current peca statuses."""
+    """Recalcula e atualiza o status da OP com base nas peças."""
     op = await get_op_by_id(db, op_id)
     pecas = op.pecas
 
@@ -101,4 +96,4 @@ async def auto_update_op_status(db: AsyncSession, op_id: uuid.UUID) -> None:
     else:
         op.status = OrdemProducaoStatus.aberta
 
-    await db.flush()
+    await db.commit()
