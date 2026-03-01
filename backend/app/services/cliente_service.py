@@ -14,7 +14,7 @@ async def get_cliente_by_id(db: AsyncSession, cliente_id: uuid.UUID) -> Cliente:
     cliente = result.scalar_one_or_none()
     if not cliente:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Client not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado"
         )
     return cliente
 
@@ -27,7 +27,7 @@ async def list_clientes(db: AsyncSession, skip: int = 0, limit: int = 100) -> Li
 async def create_cliente(db: AsyncSession, data: ClienteCreate) -> Cliente:
     cliente = Cliente(**data.model_dump())
     db.add(cliente)
-    await db.flush()
+    await db.commit()
     await db.refresh(cliente)
     return cliente
 
@@ -38,7 +38,7 @@ async def update_cliente(
     cliente = await get_cliente_by_id(db, cliente_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(cliente, field, value)
-    await db.flush()
+    await db.commit()
     await db.refresh(cliente)
     return cliente
 
@@ -46,4 +46,4 @@ async def update_cliente(
 async def delete_cliente(db: AsyncSession, cliente_id: uuid.UUID) -> None:
     cliente = await get_cliente_by_id(db, cliente_id)
     await db.delete(cliente)
-    await db.flush()
+    await db.commit()
