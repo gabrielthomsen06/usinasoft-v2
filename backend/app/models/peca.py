@@ -1,8 +1,9 @@
+import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,8 +12,6 @@ from app.db.database import Base
 if TYPE_CHECKING:
     from app.models.cliente import Cliente
     from app.models.ordem_producao import OrdemProducao
-
-import enum
 
 
 class PecaStatus(str, enum.Enum):
@@ -46,10 +45,10 @@ class Peca(Base):
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     ordem_producao: Mapped["OrdemProducao"] = relationship(

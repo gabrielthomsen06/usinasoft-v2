@@ -18,7 +18,7 @@ class PecaBase(BaseModel):
 
 class PecaCreate(PecaBase):
     cliente_id: uuid.UUID
-    ordem_producao_codigo: str  # used to auto-create/find the OP
+    ordem_producao_id: uuid.UUID  # ID da OP já existente
 
 
 class PecaUpdate(BaseModel):
