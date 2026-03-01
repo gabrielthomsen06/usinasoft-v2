@@ -1,5 +1,9 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from pathlib import Path
+
+# Caminho absoluto até o .env, independente de onde o uvicorn é rodado
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):
@@ -7,12 +11,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/usinasoft"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/usinasoft"
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
     DEBUG: bool = True
 
     class Config:
-        env_file = ".env"
+        env_file = str(ENV_FILE)
 
 
 settings = Settings()
