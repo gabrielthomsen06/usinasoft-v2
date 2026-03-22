@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/Badge';
 import { useToast } from '../components/ui/Toast';
 import { opsService, OPPayload } from '../services/ops';
 import { clientesService } from '../services/clientes';
-import { OrdemProducao, Cliente } from '../types';
+import { OrdemProducao, Cliente, Peca } from '../types';
 
 const emptyForm: OPPayload = {
   codigo: '',
@@ -263,12 +263,12 @@ export function Ops() {
                     {expandedId === op.id && (
                       <tr key={`${op.id}-pecas`} className="bg-gray-50">
                         <td colSpan={6} className="px-6 py-3">
-                          {op.pecas.length === 0 ? (
+                          {!op.pecas || op.pecas.length === 0 ? (
                             <p className="text-xs text-gray-400 italic">Nenhuma peça nesta OP</p>
                           ) : (
                             <div className="space-y-1">
                               <p className="text-xs font-semibold text-gray-500 mb-2">Peças desta OP:</p>
-                              {op.pecas.map((peca) => (
+                              {op.pecas.map((peca: Peca) => (
                                 <div key={peca.id} className="flex items-center gap-3 text-xs text-gray-600">
                                   <span className="font-medium">{peca.codigo}</span>
                                   <span>—</span>
