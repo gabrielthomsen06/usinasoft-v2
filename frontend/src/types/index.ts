@@ -26,6 +26,7 @@ export interface OrdemProducao {
   total_pecas: number;
   pecas_concluidas: number;
   percentual_conclusao: number;
+  pecas?: Peca[];
   created_at: string;
   updated_at: string;
 }
