@@ -1,0 +1,20 @@
+{$DOMAIN} {
+    # HTTPS automático via Let's Encrypt
+    tls {$SSL_EMAIL}
+
+    # Frontend (SPA)
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # Compressão
+    encode gzip zstd
+
+    # Logs
+    log {
+        output file /data/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}

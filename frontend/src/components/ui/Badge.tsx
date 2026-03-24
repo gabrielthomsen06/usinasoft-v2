@@ -8,42 +8,44 @@ interface BadgeProps {
   status: StatusValue;
 }
 
-const statusConfig: Record<StatusValue, { label: string; className: string }> = {
+const statusConfig: Record<StatusValue, { label: string; dot: string; text: string }> = {
   em_fila: {
     label: 'Em Fila',
-    className: 'bg-gray-100 text-gray-700',
+    dot: 'bg-gray-400',
+    text: 'text-gray-600',
   },
   em_andamento: {
     label: 'Em Andamento',
-    className: 'bg-blue-100 text-blue-700',
+    dot: 'bg-blue-500',
+    text: 'text-blue-700',
   },
   pausada: {
     label: 'Pausada',
-    className: 'bg-yellow-100 text-yellow-700',
+    dot: 'bg-amber-400',
+    text: 'text-amber-700',
   },
   concluida: {
     label: 'Concluída',
-    className: 'bg-green-100 text-green-700',
+    dot: 'bg-emerald-500',
+    text: 'text-emerald-700',
   },
   cancelada: {
     label: 'Cancelada',
-    className: 'bg-red-100 text-red-700',
+    dot: 'bg-red-400',
+    text: 'text-red-600',
   },
   aberta: {
     label: 'Aberta',
-    className: 'bg-gray-100 text-gray-700',
+    dot: 'bg-gray-400',
+    text: 'text-gray-600',
   },
 };
 
 export function Badge({ status }: BadgeProps) {
-  const config = statusConfig[status] ?? { label: status, className: 'bg-gray-100 text-gray-600' };
+  const config = statusConfig[status] ?? { label: status, dot: 'bg-gray-400', text: 'text-gray-600' };
   return (
-    <span
-      className={[
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-        config.className,
-      ].join(' ')}
-    >
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {config.label}
     </span>
   );

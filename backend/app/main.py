@@ -9,6 +9,8 @@ app = FastAPI(
     description="ERP system for machining production management",
     version="2.0.0",
     debug=settings.DEBUG,
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
 )
 
 app.add_middleware(

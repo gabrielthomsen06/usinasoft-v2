@@ -11,13 +11,13 @@ export function Card({ title, children, className = '', padding = true }: CardPr
   return (
     <div
       className={[
-        'bg-white rounded-xl shadow-sm border border-gray-100',
-        padding ? 'p-6' : '',
+        'bg-white rounded-lg border border-gray-200/60',
+        padding ? 'p-5' : '',
         className,
       ].join(' ')}
     >
       {title && (
-        <h3 className="text-base font-semibold text-secondary mb-4">{title}</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3 px-5 pt-4">{title}</h3>
       )}
       {children}
     </div>

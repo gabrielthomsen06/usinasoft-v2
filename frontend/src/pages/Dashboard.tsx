@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Wrench, Users, ClipboardList, CheckCircle2, TrendingUp, Clock } from 'lucide-react';
-import { Card } from '../components/ui/Card';
+import { Wrench, Users, ClipboardList, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { pecasService } from '../services/pecas';
 import { clientesService } from '../services/clientes';
@@ -45,130 +44,112 @@ export function Dashboard() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const statCards = [
-    {
-      label: 'Total de Peças',
-      value: stats.totalPecas,
-      icon: Wrench,
-      color: 'text-primary',
-      bg: 'bg-orange-50',
-    },
-    {
-      label: 'Peças Concluídas',
-      value: stats.pecasConcluidas,
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-    },
-    {
-      label: 'OPs em Aberto',
-      value: stats.opsAbertas,
-      icon: ClipboardList,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-    },
-    {
-      label: 'Clientes',
-      value: stats.totalClientes,
-      icon: Users,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-    },
-  ];
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
       </div>
     );
   }
 
+  const completionRate = stats.totalPecas > 0
+    ? Math.round((stats.pecasConcluidas / stats.totalPecas) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-secondary">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Visão geral da produção</p>
-      </div>
+      <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, icon: Icon, color, bg }) => (
-          <Card key={label} className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bg} shrink-0`}>
-              <Icon size={24} className={color} />
+      {/* Stats */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        {[
+          { label: 'Peças', value: stats.totalPecas, icon: Wrench },
+          { label: 'Concluídas', value: stats.pecasConcluidas, icon: CheckCircle2 },
+          { label: 'OPs abertas', value: stats.opsAbertas, icon: ClipboardList },
+          { label: 'Clientes', value: stats.totalClientes, icon: Users },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="bg-white border border-gray-200/60 rounded-lg px-4 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <Icon size={15} className="text-gray-400" strokeWidth={1.8} />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-secondary">{value}</p>
-              <p className="text-sm text-gray-500">{label}</p>
-            </div>
-          </Card>
+            <p className="text-2xl font-semibold text-gray-900 tabular-nums">{value}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+          </div>
         ))}
       </div>
 
-      {/* Completion rate */}
+      {/* Completion bar */}
       {stats.totalPecas > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={18} className="text-primary" />
-              <span className="font-medium text-secondary text-sm">Taxa de Conclusão de Peças</span>
-            </div>
-            <span className="text-sm font-semibold text-secondary">
-              {Math.round((stats.pecasConcluidas / stats.totalPecas) * 100)}%
-            </span>
+        <div className="bg-white border border-gray-200/60 rounded-lg px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[13px] text-gray-600">Conclusão de peças</span>
+            <span className="text-[13px] font-medium text-gray-900 tabular-nums">{completionRate}%</span>
           </div>
-          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${(stats.pecasConcluidas / stats.totalPecas) * 100}%` }}
+              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${completionRate}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            {stats.pecasConcluidas} de {stats.totalPecas} peças concluídas
+          <p className="text-[11px] text-gray-400 mt-1.5">
+            {stats.pecasConcluidas} de {stats.totalPecas}
           </p>
-        </Card>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Recent pecas */}
-        <Card title="Peças Recentes" padding={false}>
+        <div className="bg-white border border-gray-200/60 rounded-lg">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-[13px] font-semibold text-gray-900">Peças recentes</h3>
+          </div>
           {recentPecas.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-400 text-sm">
+            <p className="px-4 py-8 text-center text-[13px] text-gray-400">
               Nenhuma peça cadastrada
-            </div>
+            </p>
           ) : (
-            <ul className="divide-y divide-gray-50">
-              {recentPecas.map((peca) => (
-                <li key={peca.id} className="flex items-center justify-between px-6 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-secondary">{peca.codigo}</p>
-                    <p className="text-xs text-gray-400 truncate max-w-[180px]">{peca.descricao}</p>
+            <ul>
+              {recentPecas.map((peca, i) => (
+                <li
+                  key={peca.id}
+                  className={`flex items-center justify-between px-4 py-2.5 ${
+                    i < recentPecas.length - 1 ? 'border-b border-gray-50' : ''
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-gray-900 truncate">{peca.codigo}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{peca.descricao}</p>
                   </div>
                   <Badge status={peca.status} />
                 </li>
               ))}
             </ul>
           )}
-        </Card>
+        </div>
 
         {/* Recent OPs */}
-        <Card title="Ordens de Produção Recentes" padding={false}>
+        <div className="bg-white border border-gray-200/60 rounded-lg">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-[13px] font-semibold text-gray-900">OPs recentes</h3>
+          </div>
           {recentOps.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-400 text-sm">
+            <p className="px-4 py-8 text-center text-[13px] text-gray-400">
               Nenhuma OP cadastrada
-            </div>
+            </p>
           ) : (
-            <ul className="divide-y divide-gray-50">
-              {recentOps.map((op) => (
-                <li key={op.id} className="flex items-center justify-between px-6 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                      <Clock size={14} className="text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-secondary">{op.codigo}</p>
-                      <p className="text-xs text-gray-400">
+            <ul>
+              {recentOps.map((op, i) => (
+                <li
+                  key={op.id}
+                  className={`flex items-center justify-between px-4 py-2.5 ${
+                    i < recentOps.length - 1 ? 'border-b border-gray-50' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Clock size={13} className="text-gray-300 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-gray-900">{op.codigo}</p>
+                      <p className="text-[11px] text-gray-400">
                         {op.pecas_concluidas}/{op.total_pecas} peças
                       </p>
                     </div>
@@ -178,7 +159,7 @@ export function Dashboard() {
               ))}
             </ul>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );

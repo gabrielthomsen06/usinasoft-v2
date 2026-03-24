@@ -58,23 +58,22 @@ function SelectField({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-sm font-medium text-secondary">
+        <label className="text-[12px] font-medium text-gray-500">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-400 ml-0.5">*</span>}
         </label>
       )}
       <select
         className={[
-          'w-full px-3 py-2 border rounded-lg text-sm text-secondary bg-white',
-          'focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-primary',
-          'disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors',
-          error ? 'border-red-400' : 'border-gray-300',
+          'w-full px-3 py-2 border rounded-md text-[13px] text-gray-700 bg-white',
+          'focus:outline-none focus:border-gray-300 transition-colors',
+          error ? 'border-red-300' : 'border-gray-200',
         ].join(' ')}
         {...props}
       >
         {children}
       </select>
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[11px] text-red-500 mt-0.5">{error}</p>}
     </div>
   );
 }
@@ -169,8 +168,8 @@ function PecaFormModal({
       title={isEditing ? 'Editar Peça' : 'Cadastrar Peça'}
       size="lg"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <Controller
             name="cliente_id"
             control={control}
@@ -235,7 +234,7 @@ function PecaFormModal({
           {...register('descricao')}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <Input
             label="Quantidade"
             type="number"
@@ -274,7 +273,7 @@ function PecaFormModal({
           />
         )}
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-end gap-2.5 pt-2">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancelar
           </Button>
@@ -324,9 +323,9 @@ function StatusModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Alterar Status" size="sm">
-      <div className="space-y-4">
-        <p className="text-sm text-gray-500">
-          Peça: <span className="font-medium text-secondary">{peca?.codigo}</span>
+      <div className="space-y-3.5">
+        <p className="text-[13px] text-gray-500">
+          Peça: <span className="font-medium text-gray-900">{peca?.codigo}</span>
         </p>
         <SelectField
           label="Novo Status"
@@ -339,7 +338,7 @@ function StatusModal({
             </option>
           ))}
         </SelectField>
-        <div className="flex justify-end gap-3 pt-1">
+        <div className="flex justify-end gap-2.5 pt-1">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
@@ -384,13 +383,13 @@ function DeleteModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirmar Exclusão" size="sm">
-      <div className="space-y-4">
-        <p className="text-sm text-gray-600">
+      <div className="space-y-3.5">
+        <p className="text-[13px] text-gray-600">
           Tem certeza que deseja excluir a peça{' '}
-          <span className="font-semibold text-secondary">{peca?.codigo}</span>? Esta ação não pode
+          <span className="font-medium text-gray-900">{peca?.codigo}</span>? Esta ação não pode
           ser desfeita.
         </p>
-        <div className="flex justify-end gap-3 pt-1">
+        <div className="flex justify-end gap-2.5 pt-1">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
@@ -475,47 +474,47 @@ export function Pecas() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-secondary">Peças</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {pecas.length} {pecas.length === 1 ? 'peça cadastrada' : 'peças cadastradas'}
+          <h1 className="text-lg font-semibold text-gray-900">Peças</h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {pecas.length} {pecas.length === 1 ? 'cadastrada' : 'cadastradas'}
           </p>
         </div>
-        <Button onClick={openCreate} size="md">
-          <Plus size={16} />
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[13px] font-medium hover:bg-[#243052] transition-colors self-start sm:self-auto"
+        >
+          <Plus size={14} />
           Cadastrar Peça
-        </Button>
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row gap-3">
-        {/* Search */}
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
           <input
             type="text"
             placeholder="Buscar por código, descrição, cliente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-primary"
+            className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
           />
         </div>
 
-        {/* Status filter */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs text-gray-500 font-medium hidden sm:block">Status:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(['all', ...STATUS_OPTIONS] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
               className={[
-                'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                'px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors',
                 filterStatus === s
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                  ? 'bg-[#1a2340] text-white'
+                  : 'bg-white border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:border-gray-300',
               ].join(' ')}
             >
               {s === 'all' ? 'Todos' : STATUS_LABELS[s]}
@@ -525,124 +524,123 @@ export function Pecas() {
 
         <button
           onClick={() => void loadData()}
-          className="p-2 rounded-lg text-gray-500 hover:text-secondary hover:bg-gray-100 transition-colors"
+          className="p-2 text-gray-300 hover:text-gray-600 transition-colors self-start"
           title="Atualizar"
         >
-          <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+          <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200/60 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 gap-3">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              <Search size={20} className="text-gray-400" />
-            </div>
-            <p className="text-gray-500 text-sm">Nenhuma peça encontrada</p>
+          <div className="flex flex-col items-center justify-center h-48 gap-2">
+            <p className="text-[13px] text-gray-400">Nenhuma peça encontrada</p>
             {filterStatus !== 'all' || search ? (
               <button
                 onClick={() => {
                   setSearch('');
                   setFilterStatus('all');
                 }}
-                className="text-xs text-primary hover:underline"
+                className="text-[12px] text-blue-600 hover:underline"
               >
                 Limpar filtros
               </button>
             ) : (
-              <Button size="sm" onClick={openCreate}>
-                <Plus size={14} />
+              <button onClick={openCreate} className="text-[12px] text-blue-600 hover:underline">
                 Cadastrar primeira peça
-              </Button>
+              </button>
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-gray-100">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">
                     Código
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">
                     Descrição
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">
                     Cliente
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                     OP / NF
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                  <th className="px-4 py-2.5 text-center text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">
                     Qtd
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden xl:table-cell">
                     Entrega
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
+                  <th className="px-4 py-2.5 w-28" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map((peca) => (
-                  <tr key={peca.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-secondary whitespace-nowrap">
+              <tbody>
+                {filtered.map((peca, i) => (
+                  <tr
+                    key={peca.id}
+                    className={`hover:bg-gray-50/50 transition-colors ${
+                      i < filtered.length - 1 ? 'border-b border-gray-50' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-2.5 text-[13px] font-medium text-gray-900 whitespace-nowrap">
                       {peca.codigo}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">
+                    <td className="px-4 py-2.5 text-[13px] text-gray-500 max-w-[180px] truncate">
                       {peca.descricao}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 hidden md:table-cell whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-[13px] text-gray-500 hidden md:table-cell whitespace-nowrap">
                       {getClienteName(peca)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 hidden lg:table-cell whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-[13px] text-gray-500 hidden lg:table-cell whitespace-nowrap">
                       {getOpCodigo(peca)}
                       {peca.pedido && (
-                        <span className="text-gray-400 text-xs ml-1">({peca.pedido})</span>
+                        <span className="text-gray-300 text-[11px] ml-1">({peca.pedido})</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600 hidden sm:table-cell">
+                    <td className="px-4 py-2.5 text-center text-[13px] text-gray-500 tabular-nums hidden sm:table-cell">
                       {peca.quantidade}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 hidden xl:table-cell whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-[13px] text-gray-500 hidden xl:table-cell whitespace-nowrap">
                       {peca.data_entrega
                         ? new Date(peca.data_entrega).toLocaleDateString('pt-BR')
                         : '—'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5">
                       <Badge status={peca.status} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-0.5">
                         <button
                           onClick={() => setStatusPeca(peca)}
-                          className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 text-gray-300 hover:text-blue-500 rounded transition-colors"
                           title="Alterar status"
                         >
-                          <RefreshCw size={15} />
+                          <RefreshCw size={14} />
                         </button>
                         <button
                           onClick={() => openEdit(peca)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                          className="p-1.5 text-gray-300 hover:text-gray-600 rounded transition-colors"
                           title="Editar"
                         >
-                          <Pencil size={15} />
+                          <Pencil size={14} />
                         </button>
                         <button
                           onClick={() => setDeletePeca(peca)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 text-gray-300 hover:text-red-500 rounded transition-colors"
                           title="Excluir"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>

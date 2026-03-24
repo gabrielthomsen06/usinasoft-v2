@@ -1,4 +1,4 @@
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 interface HeaderProps {
@@ -6,7 +6,7 @@ interface HeaderProps {
   title?: string;
 }
 
-export function Header({ onMenuClick, title }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps) {
   const { user } = useAuth();
 
   const initials = user
@@ -14,40 +14,22 @@ export function Header({ onMenuClick, title }: HeaderProps) {
     : '??';
 
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-6 shrink-0">
-      {/* Left */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onMenuClick}
-          className="p-2 rounded-lg text-gray-500 hover:text-secondary hover:bg-gray-100 transition-colors lg:hidden"
-          aria-label="Menu"
-        >
-          <Menu size={20} />
-        </button>
-        {title && (
-          <h1 className="text-lg font-semibold text-secondary hidden sm:block">{title}</h1>
-        )}
-      </div>
+    <header className="h-14 bg-white border-b border-gray-200/60 flex items-center justify-between px-4 lg:px-6 shrink-0">
+      <button
+        onClick={onMenuClick}
+        className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors lg:hidden"
+        aria-label="Menu"
+      >
+        <Menu size={18} />
+      </button>
 
-      {/* Right */}
-      <div className="flex items-center gap-3">
-        <button
-          className="p-2 rounded-lg text-gray-500 hover:text-secondary hover:bg-gray-100 transition-colors relative"
-          aria-label="Notificações"
-        >
-          <Bell size={18} />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-semibold select-none">
-            {initials}
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium text-secondary leading-tight">
-              {user ? `${user.first_name} ${user.last_name}` : ''}
-            </p>
-            <p className="text-xs text-gray-400 leading-tight">{user?.email}</p>
-          </div>
+      <div className="ml-auto flex items-center gap-2.5">
+        <div className="w-7 h-7 bg-[#1a2340] rounded-full flex items-center justify-center text-white text-[10px] font-semibold select-none">
+          {initials}
         </div>
+        <span className="text-[13px] font-medium text-gray-700 hidden sm:block">
+          {user ? `${user.first_name} ${user.last_name}` : ''}
+        </span>
       </div>
     </header>
   );
