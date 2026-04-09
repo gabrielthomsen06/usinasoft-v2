@@ -1,0 +1,281 @@
+import { useEffect, useState } from 'react';
+import { Plus, Pencil, Trash2, X, Search, CheckCircle } from 'lucide-react';
+import { useToast } from '../components/ui/Toast';
+import { contasReceberService, ContaReceberPayload } from '../services/contasReceber';
+import { clientesService } from '../services/clientes';
+import { ContaReceber, Cliente } from '../types';
+
+const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
+  pendente: { label: 'Pendente', color: 'text-amber-700', bg: 'bg-amber-50' },
+  pago: { label: 'Pago', color: 'text-emerald-700', bg: 'bg-emerald-50' },
+  vencido: { label: 'Vencido', color: 'text-red-700', bg: 'bg-red-50' },
+  cancelado: { label: 'Cancelado', color: 'text-gray-500', bg: 'bg-gray-100' },
+};
+
+const emptyForm: ContaReceberPayload = {
+  descricao: '', cliente_id: '', valor: 0, data_emissao: new Date().toISOString().slice(0, 10), data_vencimento: '', observacoes: '',
+};
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
+export function ContasReceber() {
+  const { toast } = useToast();
+  const [items, setItems] = useState<ContaReceber[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ContaReceberPayload>(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const load = async () => {
+    try {
+      const [contas, cls] = await Promise.all([
+        contasReceberService.list(statusFilter ? { status: statusFilter } : undefined),
+        clientesService.list(),
+      ]);
+      setItems(contas);
+      setClientes(cls);
+    } catch {
+      toast('error', 'Erro ao carregar contas a receber');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, [statusFilter]);
+
+  const filtered = items.filter((c) => {
+    const q = search.toLowerCase();
+    return c.descricao.toLowerCase().includes(q) || (c.cliente?.nome ?? '').toLowerCase().includes(q);
+  });
+
+  const totals = {
+    total: items.reduce((s, c) => s + c.valor, 0),
+    pendente: items.filter((c) => c.status === 'pendente').reduce((s, c) => s + c.valor, 0),
+    pago: items.filter((c) => c.status === 'pago').reduce((s, c) => s + c.valor, 0),
+    vencido: items.filter((c) => c.status === 'vencido').reduce((s, c) => s + c.valor, 0),
+  };
+
+  const openCreate = () => { setEditingId(null); setForm(emptyForm); setShowModal(true); };
+  const openEdit = (c: ContaReceber) => {
+    setEditingId(c.id);
+    setForm({
+      descricao: c.descricao, cliente_id: c.cliente_id, ordem_producao_id: c.ordem_producao_id,
+      valor: c.valor, data_emissao: c.data_emissao, data_vencimento: c.data_vencimento, observacoes: c.observacoes ?? '',
+    });
+    setShowModal(true);
+  };
+  const closeModal = () => { setShowModal(false); setForm(emptyForm); setEditingId(null); };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.descricao.trim() || !form.cliente_id || submitting) return;
+    setSubmitting(true);
+    try {
+      const payload = { ...form, valor: Number(form.valor) };
+      if (editingId) {
+        await contasReceberService.update(editingId, payload);
+        toast('success', 'Conta atualizada!');
+      } else {
+        await contasReceberService.create(payload);
+        toast('success', 'Conta criada!');
+      }
+      closeModal();
+      setIsLoading(true);
+      load();
+    } catch {
+      toast('error', 'Erro ao salvar conta');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleMarkPaid = async (id: string) => {
+    try {
+      await contasReceberService.update(id, { status: 'pago', data_pagamento: new Date().toISOString().slice(0, 10) });
+      toast('success', 'Conta marcada como paga!');
+      setIsLoading(true);
+      load();
+    } catch {
+      toast('error', 'Erro ao atualizar conta');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
+    try {
+      await contasReceberService.remove(id);
+      setItems((prev) => prev.filter((c) => c.id !== id));
+      toast('success', 'Conta removida!');
+    } catch {
+      toast('error', 'Erro ao remover conta');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const statusFilters = ['', 'pendente', 'pago', 'vencido', 'cancelado'];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900">Contas a Receber</h1>
+          <p className="text-[14px] text-gray-400 mt-0.5">{items.length} contas</p>
+        </div>
+        <button onClick={openCreate} className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors">
+          <Plus size={14} /> Nova Conta
+        </button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'Total', value: totals.total, border: 'border-l-blue-500' },
+          { label: 'Pendente', value: totals.pendente, border: 'border-l-amber-500' },
+          { label: 'Recebido', value: totals.pago, border: 'border-l-emerald-500' },
+          { label: 'Vencido', value: totals.vencido, border: 'border-l-red-500' },
+        ].map((card) => (
+          <div key={card.label} className={`bg-white border border-gray-200/60 rounded-lg p-3.5 border-l-4 ${card.border}`}>
+            <p className="text-[13px] text-gray-400 font-medium">{card.label}</p>
+            <p className="text-[18px] font-bold text-gray-900 mt-0.5">{formatCurrency(card.value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+          <input type="text" placeholder="Buscar por descrição ou cliente..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
+        </div>
+        <div className="flex gap-1.5">
+          {statusFilters.map((s) => (
+            <button key={s || 'all'} onClick={() => { setStatusFilter(s); setIsLoading(true); }}
+              className={`px-3 py-2 rounded-md text-[14px] font-medium transition-colors ${statusFilter === s ? 'bg-[#1a2340] text-white' : 'bg-white border border-gray-200/60 text-gray-500 hover:bg-gray-50'}`}>
+              {s ? statusLabels[s]?.label : 'Todas'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border border-gray-200/60 rounded-lg overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48"><div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-2">
+            <p className="text-[15px] text-gray-400">{search ? 'Nenhuma conta encontrada' : 'Nenhuma conta cadastrada'}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Descrição</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Cliente</th>
+                  <th className="px-4 py-2.5 text-right text-[13px] font-medium text-gray-400 uppercase tracking-wider">Valor</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Vencimento</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2.5 w-28" />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c, i) => {
+                  const st = statusLabels[c.status] || statusLabels.pendente;
+                  return (
+                    <tr key={c.id} className={`hover:bg-gray-50/50 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <td className="px-4 py-2.5 text-[15px] font-medium text-gray-900 max-w-[200px] truncate">{c.descricao}</td>
+                      <td className="px-4 py-2.5 text-[15px] text-gray-500">{c.cliente?.nome ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-[15px] font-semibold text-gray-900 text-right">{formatCurrency(c.valor)}</td>
+                      <td className="px-4 py-2.5 text-[15px] text-gray-500 hidden md:table-cell">{new Date(c.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[13px] font-semibold ${st.color} ${st.bg}`}>{st.label}</span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center justify-end gap-0.5">
+                          {c.status === 'pendente' && (
+                            <button onClick={() => handleMarkPaid(c.id)} className="p-1.5 text-gray-300 hover:text-emerald-600 rounded transition-colors" title="Marcar como pago">
+                              <CheckCircle size={14} />
+                            </button>
+                          )}
+                          <button onClick={() => openEdit(c)} className="p-1.5 text-gray-300 hover:text-gray-600 rounded transition-colors" title="Editar"><Pencil size={14} /></button>
+                          <button onClick={() => handleDelete(c.id)} disabled={deletingId === c.id} className="p-1.5 text-gray-300 hover:text-red-500 rounded transition-colors disabled:opacity-50" title="Excluir"><Trash2 size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+              <h2 className="text-[16px] font-semibold text-gray-900">{editingId ? 'Editar Conta a Receber' : 'Nova Conta a Receber'}</h2>
+              <button onClick={closeModal} className="text-gray-300 hover:text-gray-500 transition-colors"><X size={16} /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+              <div>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Descrição <span className="text-red-400">*</span></label>
+                <input type="text" required value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Descrição da conta"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Cliente <span className="text-red-400">*</span></label>
+                  <select required value={form.cliente_id} onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors">
+                    <option value="">Selecione...</option>
+                    {clientes.map((cl) => <option key={cl.id} value={cl.id}>{cl.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Valor <span className="text-red-400">*</span></label>
+                  <input type="number" required step="0.01" min="0" value={form.valor || ''} onChange={(e) => setForm({ ...form, valor: parseFloat(e.target.value) || 0 })}
+                    placeholder="0,00" className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Data Emissão</label>
+                  <input type="date" value={form.data_emissao} onChange={(e) => setForm({ ...form, data_emissao: e.target.value })}
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Data Vencimento <span className="text-red-400">*</span></label>
+                  <input type="date" required value={form.data_vencimento} onChange={(e) => setForm({ ...form, data_vencimento: e.target.value })}
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Observações</label>
+                <textarea value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} rows={2} placeholder="Observações..."
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors resize-none" />
+              </div>
+              <div className="flex gap-2.5 pt-1">
+                <button type="button" onClick={closeModal} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button type="submit" disabled={submitting} className="flex-1 bg-[#1a2340] text-white py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors disabled:opacity-50">
+                  {submitting ? 'Salvando...' : editingId ? 'Salvar' : 'Cadastrar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

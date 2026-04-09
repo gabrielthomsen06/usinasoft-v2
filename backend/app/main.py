@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routes import auth, usuarios, clientes, pecas, ops
+from app.api.routes import (
+    auth, usuarios, clientes, pecas, ops,
+    fornecedores, contas_receber, contas_pagar, lancamentos, dashboard_financeiro,
+)
 
 app = FastAPI(
     title="UsinaSoft v2 API",
@@ -26,6 +29,11 @@ app.include_router(usuarios.router, prefix="/api")
 app.include_router(clientes.router, prefix="/api")
 app.include_router(pecas.router, prefix="/api")
 app.include_router(ops.router, prefix="/api")
+app.include_router(fornecedores.router, prefix="/api")
+app.include_router(contas_receber.router, prefix="/api")
+app.include_router(contas_pagar.router, prefix="/api")
+app.include_router(lancamentos.router, prefix="/api")
+app.include_router(dashboard_financeiro.router, prefix="/api")
 
 
 @app.get("/health")

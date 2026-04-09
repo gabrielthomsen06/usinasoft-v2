@@ -44,7 +44,7 @@ const statusConfig: Record<StatusValue, { label: string; dot: string; text: stri
 export function Badge({ status }: BadgeProps) {
   const config = statusConfig[status] ?? { label: status, dot: 'bg-gray-400', text: 'text-gray-600' };
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.text}`}>
+    <span className={`inline-flex items-center gap-1.5 text-[14px] font-medium ${config.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {config.label}
     </span>

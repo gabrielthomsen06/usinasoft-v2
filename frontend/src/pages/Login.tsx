@@ -76,7 +76,7 @@ export function Login() {
             <span className="font-extrabold text-3xl text-white tracking-tight">
               usi<span className="text-accent">port</span>
             </span>
-            <p className="text-accent/70 text-[10px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
+            <p className="text-accent/70 text-[12px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
           </div>
         </div>
 
@@ -84,7 +84,7 @@ export function Login() {
         <div className="relative z-10 max-w-lg">
           <div className="inline-flex items-center gap-2 bg-accent/15 border border-accent/20 rounded-full px-4 py-1.5 mb-8">
             <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-            <span className="text-accent text-xs font-semibold tracking-wide">Sistema de Gestão Industrial</span>
+            <span className="text-accent text-[14px] font-semibold tracking-wide">Sistema de Gestão Industrial</span>
           </div>
 
           <h2 className="text-[3.25rem] font-extrabold text-white leading-[1.1] mb-6">
@@ -112,14 +112,14 @@ export function Login() {
                 </div>
                 <div>
                   <span className="text-white font-semibold text-sm">{title}</span>
-                  <p className="text-primary-300/70 text-xs mt-0.5">{desc}</p>
+                  <p className="text-primary-300/70 text-[14px] mt-0.5">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-primary-300/40 text-xs relative z-10">
+        <p className="text-primary-300/40 text-[14px] relative z-10">
           © {new Date().getFullYear()} Usiport — Todos os direitos reservados
         </p>
       </div>
@@ -139,7 +139,7 @@ export function Login() {
               <span className="font-extrabold text-2xl text-primary tracking-tight">
                 usi<span className="text-accent">port</span>
               </span>
-              <p className="text-accent/70 text-[10px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
+              <p className="text-accent/70 text-[12px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
             </div>
           </div>
 
@@ -153,7 +153,7 @@ export function Login() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Email field */}
               <div>
-                <label htmlFor="email" className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                <label htmlFor="email" className="text-[14px] font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
                   E-mail
                 </label>
                 <div className="relative group">
@@ -178,13 +178,13 @@ export function Login() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-red-500 mt-1.5 ml-0.5">{errors.email.message}</p>
+                  <p className="text-[14px] text-red-500 mt-1.5 ml-0.5">{errors.email.message}</p>
                 )}
               </div>
 
               {/* Password field */}
               <div>
-                <label htmlFor="password" className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                <label htmlFor="password" className="text-[14px] font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
                   Senha
                 </label>
                 <div className="relative group">
@@ -209,7 +209,7 @@ export function Login() {
                   />
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500 mt-1.5 ml-0.5">{errors.password.message}</p>
+                  <p className="text-[14px] text-red-500 mt-1.5 ml-0.5">{errors.password.message}</p>
                 )}
               </div>
 
@@ -245,7 +245,7 @@ export function Login() {
           </div>
 
           {/* Bottom text */}
-          <p className="text-center text-xs text-gray-300 mt-8 lg:hidden">
+          <p className="text-center text-[14px] text-gray-300 mt-8 lg:hidden">
             © {new Date().getFullYear()} Usiport — Todos os direitos reservados
           </p>
         </div>

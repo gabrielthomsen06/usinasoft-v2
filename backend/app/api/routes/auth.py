@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_admin_user
 from app.core.security import verify_token, create_access_token, create_refresh_token
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate, UsuarioResponse
@@ -35,7 +35,7 @@ async def login(
 async def register(
     data: UsuarioCreate,
     db: AsyncSession = Depends(get_db),
-    _: Usuario = Depends(get_current_active_user),
+    _: Usuario = Depends(get_current_admin_user),
 ) -> UsuarioResponse:
     return await create_usuario(db, data)
 

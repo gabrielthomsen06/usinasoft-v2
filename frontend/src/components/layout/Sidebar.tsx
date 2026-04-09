@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Wrench, Users, ClipboardList, LogOut, Ship } from 'lucide-react';
+import { LayoutDashboard, Wrench, Users, ClipboardList, LogOut, Ship, DollarSign, ArrowDownLeft, ArrowUpRight, Receipt, Building2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
@@ -12,6 +12,14 @@ const navItems = [
   { to: '/pecas', label: 'Peças', icon: Wrench },
   { to: '/clientes', label: 'Clientes', icon: Users },
   { to: '/ops', label: 'Ordens de Produção', icon: ClipboardList },
+];
+
+const financeNavItems = [
+  { to: '/financeiro', label: 'Dashboard', icon: DollarSign, end: true },
+  { to: '/financeiro/receber', label: 'Contas a Receber', icon: ArrowDownLeft },
+  { to: '/financeiro/pagar', label: 'Contas a Pagar', icon: ArrowUpRight },
+  { to: '/financeiro/lancamentos', label: 'Lançamentos', icon: Receipt },
+  { to: '/financeiro/fornecedores', label: 'Fornecedores', icon: Building2 },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -62,7 +70,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   onClick={onClose}
                   className={({ isActive }) =>
                     [
-                      'flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium',
+                      'flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] font-medium',
                       'transition-colors duration-100',
                       isActive
                         ? 'bg-white/[0.1] text-white'
@@ -76,21 +84,54 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </li>
             ))}
           </ul>
+
+          {/* Financial Module - Admin Only */}
+          {user?.role === 'admin' && (
+            <>
+              <div className="mt-4 mb-1.5 px-3">
+                <p className="text-[12px] font-bold text-accent uppercase tracking-widest">Financeiro</p>
+              </div>
+              <div className="h-px bg-white/[0.06] mx-3 mb-1.5" />
+              <ul className="space-y-0.5">
+                {financeNavItems.map(({ to, label, icon: Icon, end }) => (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={end}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        [
+                          'flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] font-medium',
+                          'transition-colors duration-100',
+                          isActive
+                            ? 'bg-white/[0.1] text-white'
+                            : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
+                        ].join(' ')
+                      }
+                    >
+                      <Icon size={16} strokeWidth={1.8} />
+                      {label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </nav>
 
         {/* User + Logout */}
         <div className="px-3 py-3 border-t border-white/[0.06]">
           {user && (
             <div className="px-3 py-1.5 mb-1">
-              <p className="text-[11px] text-white/30">Conectado como</p>
-              <p className="text-[13px] font-medium text-white/70 truncate">
+              <p className="text-[13px] text-white/30">Conectado como</p>
+              <p className="text-[15px] font-medium text-white/70 truncate">
                 {user.first_name} {user.last_name}
               </p>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-[13px] font-medium text-white/40 hover:bg-white/[0.05] hover:text-white/70 transition-colors"
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-[15px] font-medium text-white/40 hover:bg-white/[0.05] hover:text-white/70 transition-colors"
           >
             <LogOut size={15} strokeWidth={1.8} />
             Sair

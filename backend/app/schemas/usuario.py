@@ -13,6 +13,7 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     password: str
+    role: str = "user"
 
 
 class UsuarioUpdate(BaseModel):
@@ -21,10 +22,12 @@ class UsuarioUpdate(BaseModel):
     last_name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    role: Optional[str] = None
 
 
 class UsuarioResponse(UsuarioBase):
     id: uuid.UUID
+    role: str
     is_active: bool
     created_at: datetime
     updated_at: datetime

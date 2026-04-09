@@ -16,7 +16,7 @@ from app.core.config import settings
 from app.db.database import Base
 
 # Import all models so they register with Base
-from app.models import usuario, cliente, peca, ordem_producao  # noqa: F401
+from app.models import usuario, cliente, peca, ordem_producao, fornecedor, conta_receber, conta_pagar, lancamento  # noqa: F401
 
 config = context.config
 

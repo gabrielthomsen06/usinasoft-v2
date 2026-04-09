@@ -24,10 +24,10 @@ export function Header({ onMenuClick }: HeaderProps) {
       </button>
 
       <div className="ml-auto flex items-center gap-2.5">
-        <div className="w-7 h-7 bg-[#1a2340] rounded-full flex items-center justify-center text-white text-[10px] font-semibold select-none">
+        <div className="w-7 h-7 bg-[#1a2340] rounded-full flex items-center justify-center text-white text-[12px] font-semibold select-none">
           {initials}
         </div>
-        <span className="text-[13px] font-medium text-gray-700 hidden sm:block">
+        <span className="text-[15px] font-medium text-gray-700 hidden sm:block">
           {user ? `${user.first_name} ${user.last_name}` : ''}
         </span>
       </div>

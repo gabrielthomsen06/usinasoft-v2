@@ -142,11 +142,11 @@ export function Ops() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Ordens de Produção</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{ops.length} registradas</p>
+          <p className="text-[14px] text-gray-400 mt-0.5">{ops.length} registradas</p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[13px] font-medium hover:bg-[#243052] transition-colors"
+          className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors"
         >
           <Plus size={14} />
           Nova OP
@@ -162,13 +162,13 @@ export function Ops() {
             placeholder="Buscar por código ou cliente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+            className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="bg-white border border-gray-200/60 rounded-md px-3 py-2 text-[13px] text-gray-600 focus:outline-none focus:border-gray-300 transition-colors"
+          className="bg-white border border-gray-200/60 rounded-md px-3 py-2 text-[15px] text-gray-600 focus:outline-none focus:border-gray-300 transition-colors"
         >
           <option value="">Todos os status</option>
           {statusOptions.map((s) => (
@@ -185,11 +185,11 @@ export function Ops() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[15px] text-gray-400">
               {search || filterStatus ? 'Nenhuma OP encontrada' : 'Nenhuma OP cadastrada'}
             </p>
             {!search && !filterStatus && (
-              <button onClick={openCreate} className="text-[13px] text-blue-600 hover:underline">
+              <button onClick={openCreate} className="text-[15px] text-blue-600 hover:underline">
                 Criar primeira OP
               </button>
             )}
@@ -199,11 +199,11 @@ export function Ops() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Código</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Cliente</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">Peças</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Progresso</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Código</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Cliente</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">Peças</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Progresso</th>
                   <th className="px-4 py-2.5 w-28" />
                 </tr>
               </thead>
@@ -216,10 +216,10 @@ export function Ops() {
                         i < filtered.length - 1 && expandedId !== op.id ? 'border-b border-gray-50' : ''
                       }`}
                     >
-                      <td className="px-4 py-2.5 text-[13px] font-medium text-gray-900">{op.codigo}</td>
-                      <td className="px-4 py-2.5 text-[13px] text-gray-500">{op.cliente?.nome ?? getClienteNome(op.cliente_id)}</td>
+                      <td className="px-4 py-2.5 text-[15px] font-medium text-gray-900">{op.codigo}</td>
+                      <td className="px-4 py-2.5 text-[15px] text-gray-500">{op.cliente?.nome ?? getClienteNome(op.cliente_id)}</td>
                       <td className="px-4 py-2.5"><Badge status={op.status} /></td>
-                      <td className="px-4 py-2.5 text-[13px] text-gray-500 tabular-nums hidden sm:table-cell">
+                      <td className="px-4 py-2.5 text-[15px] text-gray-500 tabular-nums hidden sm:table-cell">
                         {op.pecas_concluidas}/{op.total_pecas}
                       </td>
                       <td className="px-4 py-2.5 hidden md:table-cell">
@@ -230,7 +230,7 @@ export function Ops() {
                               style={{ width: `${op.percentual_conclusao}%` }}
                             />
                           </div>
-                          <span className="text-[11px] text-gray-400 tabular-nums w-8 text-right">
+                          <span className="text-[13px] text-gray-400 tabular-nums w-8 text-right">
                             {op.percentual_conclusao}%
                           </span>
                         </div>
@@ -266,12 +266,12 @@ export function Ops() {
                       <tr key={`${op.id}-pecas`}>
                         <td colSpan={6} className="bg-gray-50/50 px-4 py-3 border-b border-gray-50">
                           {!op.pecas || op.pecas.length === 0 ? (
-                            <p className="text-[12px] text-gray-400">Nenhuma peça nesta OP</p>
+                            <p className="text-[14px] text-gray-400">Nenhuma peça nesta OP</p>
                           ) : (
                             <div className="space-y-1.5">
-                              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Peças desta OP</p>
+                              <p className="text-[13px] font-medium text-gray-400 uppercase tracking-wider">Peças desta OP</p>
                               {op.pecas.map((peca: Peca) => (
-                                <div key={peca.id} className="flex items-center gap-3 text-[12px] text-gray-600">
+                                <div key={peca.id} className="flex items-center gap-3 text-[14px] text-gray-600">
                                   <span className="font-medium text-gray-700">{peca.codigo}</span>
                                   <span className="text-gray-300">—</span>
                                   <span>{peca.descricao}</span>
@@ -297,7 +297,7 @@ export function Ops() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-              <h2 className="text-[14px] font-semibold text-gray-900">
+              <h2 className="text-[16px] font-semibold text-gray-900">
                 {editingId ? 'Editar OP' : 'Nova Ordem de Produção'}
               </h2>
               <button onClick={closeModal} className="text-gray-300 hover:text-gray-500 transition-colors">
@@ -306,7 +306,7 @@ export function Ops() {
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">
                   Código <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -315,18 +315,18 @@ export function Ops() {
                   value={form.codigo}
                   onChange={(e) => setForm({ ...form, codigo: e.target.value })}
                   placeholder="Ex: OP-2026-001"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">
                   Cliente <span className="text-red-400">*</span>
                 </label>
                 <select
                   required
                   value={form.cliente_id}
                   onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-gray-300 bg-white transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 bg-white transition-colors"
                 >
                   <option value="">Selecione um cliente</option>
                   {clientes.map((c) => (
@@ -335,11 +335,11 @@ export function Ops() {
                 </select>
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">Status</label>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Status</label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value as OrdemProducao['status'] })}
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-gray-300 bg-white transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 bg-white transition-colors"
                 >
                   {statusOptions.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
@@ -347,27 +347,27 @@ export function Ops() {
                 </select>
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">Observações</label>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Observações</label>
                 <textarea
                   value={form.observacoes}
                   onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
                   placeholder="Observações sobre a OP..."
                   rows={3}
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 resize-none transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 resize-none transition-colors"
                 />
               </div>
               <div className="flex gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[13px] font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-[#1a2340] text-white py-2 rounded-md text-[13px] font-medium hover:bg-[#243052] transition-colors disabled:opacity-50"
+                  className="flex-1 bg-[#1a2340] text-white py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors disabled:opacity-50"
                 >
                   {submitting ? 'Salvando...' : editingId ? 'Salvar' : 'Criar OP'}
                 </button>

@@ -31,8 +31,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production-use-a-strong-random-key}
       - CORS_ORIGINS=["http://localhost:3000","http://localhost:5173","http://localhost","https://${DOMAIN:-localhost}"]
       - DEBUG=${DEBUG:-true}
-    ports:
-      - "8000:8000"
+    # Porta exposta apenas na rede interna Docker (frontend faz proxy via Nginx)
+    # Não mapeia porta externa para evitar conflito com Airbyte na 8000
     depends_on:
       db:
         condition: service_healthy

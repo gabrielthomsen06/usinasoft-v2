@@ -115,11 +115,11 @@ export function Clientes() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">Clientes</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{clientes.length} cadastrados</p>
+          <p className="text-[14px] text-gray-400 mt-0.5">{clientes.length} cadastrados</p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[13px] font-medium hover:bg-[#243052] transition-colors"
+          className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors"
         >
           <Plus size={14} />
           Novo Cliente
@@ -134,7 +134,7 @@ export function Clientes() {
           placeholder="Buscar por nome, e-mail ou contato..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+          className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200/60 rounded-md text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
         />
       </div>
 
@@ -146,11 +146,11 @@ export function Clientes() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[15px] text-gray-400">
               {search ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
             </p>
             {!search && (
-              <button onClick={openCreate} className="text-[13px] text-blue-600 hover:underline">
+              <button onClick={openCreate} className="text-[15px] text-blue-600 hover:underline">
                 Cadastrar primeiro cliente
               </button>
             )}
@@ -160,10 +160,10 @@ export function Clientes() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Nome</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Contato</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">E-mail</th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Endereço</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Nome</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">Contato</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider">E-mail</th>
+                  <th className="px-4 py-2.5 text-left text-[13px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Endereço</th>
                   <th className="px-4 py-2.5 w-20" />
                 </tr>
               </thead>
@@ -175,10 +175,10 @@ export function Clientes() {
                       i < filtered.length - 1 ? 'border-b border-gray-50' : ''
                     }`}
                   >
-                    <td className="px-4 py-2.5 text-[13px] font-medium text-gray-900">{c.nome}</td>
-                    <td className="px-4 py-2.5 text-[13px] text-gray-500">{c.contato || '—'}</td>
-                    <td className="px-4 py-2.5 text-[13px] text-gray-500">{c.email || '—'}</td>
-                    <td className="px-4 py-2.5 text-[13px] text-gray-500 max-w-[200px] truncate hidden lg:table-cell">{c.endereco || '—'}</td>
+                    <td className="px-4 py-2.5 text-[15px] font-medium text-gray-900">{c.nome}</td>
+                    <td className="px-4 py-2.5 text-[15px] text-gray-500">{c.contato || '—'}</td>
+                    <td className="px-4 py-2.5 text-[15px] text-gray-500">{c.email || '—'}</td>
+                    <td className="px-4 py-2.5 text-[15px] text-gray-500 max-w-[200px] truncate hidden lg:table-cell">{c.endereco || '—'}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center justify-end gap-0.5">
                         <button
@@ -211,7 +211,7 @@ export function Clientes() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-              <h2 className="text-[14px] font-semibold text-gray-900">
+              <h2 className="text-[16px] font-semibold text-gray-900">
                 {editingId ? 'Editar Cliente' : 'Novo Cliente'}
               </h2>
               <button onClick={closeModal} className="text-gray-300 hover:text-gray-500 transition-colors">
@@ -220,7 +220,7 @@ export function Clientes() {
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">
                   Nome <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -229,51 +229,51 @@ export function Clientes() {
                   value={form.nome}
                   onChange={(e) => setForm({ ...form, nome: e.target.value })}
                   placeholder="Nome do cliente"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">Contato</label>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Contato</label>
                 <input
                   type="text"
                   value={form.contato}
                   onChange={(e) => setForm({ ...form, contato: e.target.value })}
                   placeholder="Telefone ou WhatsApp"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">E-mail</label>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">E-mail</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="email@exemplo.com"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-gray-500 mb-1">Endereço</label>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Endereço</label>
                 <input
                   type="text"
                   value={form.endereco}
                   onChange={(e) => setForm({ ...form, endereco: e.target.value })}
                   placeholder="Endereço completo"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[13px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors"
                 />
               </div>
               <div className="flex gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[13px] font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-[#1a2340] text-white py-2 rounded-md text-[13px] font-medium hover:bg-[#243052] transition-colors disabled:opacity-50"
+                  className="flex-1 bg-[#1a2340] text-white py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors disabled:opacity-50"
                 >
                   {submitting ? 'Salvando...' : editingId ? 'Salvar' : 'Cadastrar'}
                 </button>

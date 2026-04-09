@@ -73,7 +73,7 @@ export function Dashboard() {
               <Icon size={15} className="text-gray-400" strokeWidth={1.8} />
             </div>
             <p className="text-2xl font-semibold text-gray-900 tabular-nums">{value}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+            <p className="text-[14px] text-gray-400 mt-0.5">{label}</p>
           </div>
         ))}
       </div>
@@ -82,8 +82,8 @@ export function Dashboard() {
       {stats.totalPecas > 0 && (
         <div className="bg-white border border-gray-200/60 rounded-lg px-4 py-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] text-gray-600">Conclusão de peças</span>
-            <span className="text-[13px] font-medium text-gray-900 tabular-nums">{completionRate}%</span>
+            <span className="text-[15px] text-gray-600">Conclusão de peças</span>
+            <span className="text-[15px] font-medium text-gray-900 tabular-nums">{completionRate}%</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
@@ -91,7 +91,7 @@ export function Dashboard() {
               style={{ width: `${completionRate}%` }}
             />
           </div>
-          <p className="text-[11px] text-gray-400 mt-1.5">
+          <p className="text-[13px] text-gray-400 mt-1.5">
             {stats.pecasConcluidas} de {stats.totalPecas}
           </p>
         </div>
@@ -101,10 +101,10 @@ export function Dashboard() {
         {/* Recent pecas */}
         <div className="bg-white border border-gray-200/60 rounded-lg">
           <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-[13px] font-semibold text-gray-900">Peças recentes</h3>
+            <h3 className="text-[15px] font-semibold text-gray-900">Peças recentes</h3>
           </div>
           {recentPecas.length === 0 ? (
-            <p className="px-4 py-8 text-center text-[13px] text-gray-400">
+            <p className="px-4 py-8 text-center text-[15px] text-gray-400">
               Nenhuma peça cadastrada
             </p>
           ) : (
@@ -117,8 +117,8 @@ export function Dashboard() {
                   }`}
                 >
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-gray-900 truncate">{peca.codigo}</p>
-                    <p className="text-[11px] text-gray-400 truncate">{peca.descricao}</p>
+                    <p className="text-[15px] font-medium text-gray-900 truncate">{peca.codigo}</p>
+                    <p className="text-[13px] text-gray-400 truncate">{peca.descricao}</p>
                   </div>
                   <Badge status={peca.status} />
                 </li>
@@ -130,10 +130,10 @@ export function Dashboard() {
         {/* Recent OPs */}
         <div className="bg-white border border-gray-200/60 rounded-lg">
           <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-[13px] font-semibold text-gray-900">OPs recentes</h3>
+            <h3 className="text-[15px] font-semibold text-gray-900">OPs recentes</h3>
           </div>
           {recentOps.length === 0 ? (
-            <p className="px-4 py-8 text-center text-[13px] text-gray-400">
+            <p className="px-4 py-8 text-center text-[15px] text-gray-400">
               Nenhuma OP cadastrada
             </p>
           ) : (
@@ -148,8 +148,8 @@ export function Dashboard() {
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Clock size={13} className="text-gray-300 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-gray-900">{op.codigo}</p>
-                      <p className="text-[11px] text-gray-400">
+                      <p className="text-[15px] font-medium text-gray-900">{op.codigo}</p>
+                      <p className="text-[13px] text-gray-400">
                         {op.pecas_concluidas}/{op.total_pecas} peças
                       </p>
                     </div>

@@ -7,6 +7,11 @@ import { Dashboard } from './pages/Dashboard';
 import { Pecas } from './pages/Pecas';
 import { Clientes } from './pages/Clientes';
 import { Ops } from './pages/Ops';
+import { DashboardFinanceiro } from './pages/DashboardFinanceiro';
+import { ContasReceber } from './pages/ContasReceber';
+import { ContasPagar } from './pages/ContasPagar';
+import { Lancamentos } from './pages/Lancamentos';
+import { Fornecedores } from './pages/Fornecedores';
 
 export default function App() {
   return (
@@ -20,6 +25,11 @@ export default function App() {
               <Route path="pecas" element={<Pecas />} />
               <Route path="clientes" element={<Clientes />} />
               <Route path="ops" element={<Ops />} />
+              <Route path="financeiro" element={<DashboardFinanceiro />} />
+              <Route path="financeiro/receber" element={<ContasReceber />} />
+              <Route path="financeiro/pagar" element={<ContasPagar />} />
+              <Route path="financeiro/lancamentos" element={<Lancamentos />} />
+              <Route path="financeiro/fornecedores" element={<Fornecedores />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
