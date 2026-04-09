@@ -42,22 +42,20 @@ async def get_dashboard_data(
     )
     total_a_pagar = float((await db.execute(q)).scalar())
 
-    # Recebido no mês selecionado
-    q = select(func.coalesce(func.sum(Lancamento.valor), 0)).where(
+    # Receita do mês = contas a receber com vencimento no período
+    q = select(func.coalesce(func.sum(ContaReceber.valor), 0)).where(
         and_(
-            Lancamento.tipo == "receita",
-            Lancamento.data >= first_day,
-            Lancamento.data <= last_day,
+            ContaReceber.data_vencimento >= first_day,
+            ContaReceber.data_vencimento <= last_day,
         )
     )
     total_recebido_mes = float((await db.execute(q)).scalar())
 
-    # Pago no mês selecionado
-    q = select(func.coalesce(func.sum(Lancamento.valor), 0)).where(
+    # Despesas do mês = contas a pagar com vencimento no período
+    q = select(func.coalesce(func.sum(ContaPagar.valor), 0)).where(
         and_(
-            Lancamento.tipo == "despesa",
-            Lancamento.data >= first_day,
-            Lancamento.data <= last_day,
+            ContaPagar.data_vencimento >= first_day,
+            ContaPagar.data_vencimento <= last_day,
         )
     )
     total_pago_mes = float((await db.execute(q)).scalar())
