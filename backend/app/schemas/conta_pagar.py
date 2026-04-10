@@ -1,10 +1,15 @@
 import uuid
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
 from app.schemas.fornecedor import FornecedorResponse
+
+ContaPagarStatus = Literal["pendente", "pago", "vencido", "cancelado"]
+ContaPagarCategoria = Literal[
+    "fornecedor", "aluguel", "salario", "servico", "imposto", "manutencao", "outros"
+]
 
 
 class ContaPagarBase(BaseModel):
@@ -13,7 +18,7 @@ class ContaPagarBase(BaseModel):
     valor: float
     data_emissao: date
     data_vencimento: date
-    categoria: str = "outros"
+    categoria: ContaPagarCategoria = "outros"
     observacoes: Optional[str] = None
 
 
@@ -28,15 +33,15 @@ class ContaPagarUpdate(BaseModel):
     data_emissao: Optional[date] = None
     data_vencimento: Optional[date] = None
     data_pagamento: Optional[date] = None
-    categoria: Optional[str] = None
-    status: Optional[str] = None
+    categoria: Optional[ContaPagarCategoria] = None
+    status: Optional[ContaPagarStatus] = None
     observacoes: Optional[str] = None
 
 
 class ContaPagarResponse(ContaPagarBase):
     id: uuid.UUID
     data_pagamento: Optional[date] = None
-    status: str
+    status: ContaPagarStatus
     parcela_atual: int = 1
     total_parcelas: int = 1
     created_at: datetime

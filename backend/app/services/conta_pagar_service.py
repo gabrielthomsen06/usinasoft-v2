@@ -12,6 +12,7 @@ from sqlalchemy.future import select
 from app.models.conta_pagar import ContaPagar
 from app.models.lancamento import Lancamento
 from app.schemas.conta_pagar import ContaPagarCreate, ContaPagarUpdate
+from datetime import date as date_type
 
 
 async def get_conta_pagar_by_id(db: AsyncSession, conta_id: uuid.UUID) -> ContaPagar:
@@ -35,9 +36,19 @@ async def list_contas_pagar(
 ) -> List[ContaPagar]:
     query = select(ContaPagar)
 
+    today = date_type.today()
     filters = []
     if status_filter:
-        filters.append(ContaPagar.status == status_filter)
+        if status_filter == "vencido":
+            # "vencido" é computado: pendente com vencimento no passado
+            filters.append(ContaPagar.status == "pendente")
+            filters.append(ContaPagar.data_vencimento < today)
+        elif status_filter == "pendente":
+            # "pendente" exclui os já vencidos para não duplicar na listagem
+            filters.append(ContaPagar.status == "pendente")
+            filters.append(ContaPagar.data_vencimento >= today)
+        else:
+            filters.append(ContaPagar.status == status_filter)
     if categoria:
         filters.append(ContaPagar.categoria == categoria)
     if data_inicio:
@@ -78,7 +89,7 @@ async def create_conta_pagar(db: AsyncSession, data: ContaPagarCreate) -> List[C
         db.add(conta)
         contas.append(conta)
 
-    await db.commit()
+    await db.flush()
     for c in contas:
         await db.refresh(c)
     return contas
@@ -100,16 +111,20 @@ async def update_conta_pagar(
     if was_pending and new_status == "pago":
         if not conta.data_pagamento:
             conta.data_pagamento = date.today()
-        lancamento = Lancamento(
-            tipo="despesa",
-            descricao=f"Pagamento: {conta.descricao}",
-            valor=conta.valor,
-            data=conta.data_pagamento,
-            conta_pagar_id=conta.id,
+        existing_lanc = await db.execute(
+            select(Lancamento).where(Lancamento.conta_pagar_id == conta.id)
         )
-        db.add(lancamento)
+        if not existing_lanc.scalar_one_or_none():
+            lancamento = Lancamento(
+                tipo="despesa",
+                descricao=f"Pagamento: {conta.descricao}",
+                valor=conta.valor,
+                data=conta.data_pagamento,
+                conta_pagar_id=conta.id,
+            )
+            db.add(lancamento)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(conta)
     return conta
 
@@ -123,4 +138,4 @@ async def delete_conta_pagar(db: AsyncSession, conta_id: uuid.UUID) -> None:
     for lanc in result.scalars().all():
         await db.delete(lanc)
     await db.delete(conta)
-    await db.commit()
+    await db.flush()

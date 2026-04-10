@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, date as date_type
 from typing import List, Optional
 
 from fastapi import HTTPException, status
@@ -33,9 +33,17 @@ async def list_contas_receber(
 ) -> List[ContaReceber]:
     query = select(ContaReceber)
 
+    today = date_type.today()
     filters = []
     if status_filter:
-        filters.append(ContaReceber.status == status_filter)
+        if status_filter == "vencido":
+            filters.append(ContaReceber.status == "pendente")
+            filters.append(ContaReceber.data_vencimento < today)
+        elif status_filter == "pendente":
+            filters.append(ContaReceber.status == "pendente")
+            filters.append(ContaReceber.data_vencimento >= today)
+        else:
+            filters.append(ContaReceber.status == status_filter)
     if cliente_id:
         filters.append(ContaReceber.cliente_id == cliente_id)
     if data_inicio:
@@ -54,7 +62,7 @@ async def list_contas_receber(
 async def create_conta_receber(db: AsyncSession, data: ContaReceberCreate) -> ContaReceber:
     conta = ContaReceber(**data.model_dump())
     db.add(conta)
-    await db.commit()
+    await db.flush()
     await db.refresh(conta)
     return conta
 
@@ -76,16 +84,20 @@ async def update_conta_receber(
     if was_pending and new_status == "pago":
         if not conta.data_pagamento:
             conta.data_pagamento = date.today()
-        lancamento = Lancamento(
-            tipo="receita",
-            descricao=f"Recebimento: {conta.descricao}",
-            valor=conta.valor,
-            data=conta.data_pagamento,
-            conta_receber_id=conta.id,
+        existing_lanc = await db.execute(
+            select(Lancamento).where(Lancamento.conta_receber_id == conta.id)
         )
-        db.add(lancamento)
+        if not existing_lanc.scalar_one_or_none():
+            lancamento = Lancamento(
+                tipo="receita",
+                descricao=f"Recebimento: {conta.descricao}",
+                valor=conta.valor,
+                data=conta.data_pagamento,
+                conta_receber_id=conta.id,
+            )
+            db.add(lancamento)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(conta)
     return conta
 
@@ -99,4 +111,4 @@ async def delete_conta_receber(db: AsyncSession, conta_id: uuid.UUID) -> None:
     for lanc in result.scalars().all():
         await db.delete(lanc)
     await db.delete(conta)
-    await db.commit()
+    await db.flush()

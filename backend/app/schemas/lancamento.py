@@ -1,12 +1,14 @@
 import uuid
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
+LancamentoTipo = Literal["receita", "despesa"]
+
 
 class LancamentoBase(BaseModel):
-    tipo: str  # receita | despesa
+    tipo: LancamentoTipo
     descricao: str
     valor: float
     data: date

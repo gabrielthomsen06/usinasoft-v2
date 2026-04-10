@@ -27,7 +27,7 @@ async def list_fornecedores(db: AsyncSession, skip: int = 0, limit: int = 100) -
 async def create_fornecedor(db: AsyncSession, data: FornecedorCreate) -> Fornecedor:
     fornecedor = Fornecedor(**data.model_dump())
     db.add(fornecedor)
-    await db.commit()
+    await db.flush()
     await db.refresh(fornecedor)
     return fornecedor
 
@@ -38,7 +38,7 @@ async def update_fornecedor(
     fornecedor = await get_fornecedor_by_id(db, fornecedor_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(fornecedor, field, value)
-    await db.commit()
+    await db.flush()
     await db.refresh(fornecedor)
     return fornecedor
 
@@ -46,4 +46,4 @@ async def update_fornecedor(
 async def delete_fornecedor(db: AsyncSession, fornecedor_id: uuid.UUID) -> None:
     fornecedor = await get_fornecedor_by_id(db, fornecedor_id)
     await db.delete(fornecedor)
-    await db.commit()
+    await db.flush()

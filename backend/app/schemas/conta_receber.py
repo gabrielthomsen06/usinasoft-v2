@@ -1,10 +1,12 @@
 import uuid
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
 from app.schemas.cliente import ClienteResponse
+
+ContaReceberStatus = Literal["pendente", "pago", "vencido", "cancelado"]
 
 
 class ContaReceberBase(BaseModel):
@@ -29,14 +31,14 @@ class ContaReceberUpdate(BaseModel):
     data_emissao: Optional[date] = None
     data_vencimento: Optional[date] = None
     data_pagamento: Optional[date] = None
-    status: Optional[str] = None
+    status: Optional[ContaReceberStatus] = None
     observacoes: Optional[str] = None
 
 
 class ContaReceberResponse(ContaReceberBase):
     id: uuid.UUID
     data_pagamento: Optional[date] = None
-    status: str
+    status: ContaReceberStatus
     created_at: datetime
     updated_at: datetime
     cliente: Optional[ClienteResponse] = None

@@ -4,9 +4,9 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db, get_current_active_user, get_current_admin_user
 from app.models.usuario import Usuario
-from app.schemas.usuario import UsuarioResponse, UsuarioUpdate
+from app.schemas.usuario import UsuarioResponse, UsuarioUpdate, UsuarioSelfUpdate
 from app.services.usuario_service import (
     list_usuarios,
     get_usuario_by_id,
@@ -26,7 +26,7 @@ async def get_me(
 
 @router.put("/me", response_model=UsuarioResponse)
 async def update_me(
-    data: UsuarioUpdate,
+    data: UsuarioSelfUpdate,
     current_user: Usuario = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Usuario:
@@ -56,6 +56,6 @@ async def get_usuario(
 async def delete_usuario_route(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: Usuario = Depends(get_current_active_user),
+    current_user: Usuario = Depends(get_current_admin_user),
 ) -> None:
-    await delete_usuario(db, user_id)
+    await delete_usuario(db, user_id, requesting_user_id=current_user.id)

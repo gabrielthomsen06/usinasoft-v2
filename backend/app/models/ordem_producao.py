@@ -44,4 +44,6 @@ class OrdemProducao(Base):
     )
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="ordens_producao")
-    pecas: Mapped[list["Peca"]] = relationship("Peca", back_populates="ordem_producao")
+    pecas: Mapped[list["Peca"]] = relationship(
+        "Peca", back_populates="ordem_producao", cascade="all, delete-orphan"
+    )

@@ -1,5 +1,8 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, get_current_admin_user
@@ -7,9 +10,13 @@ from app.core.security import verify_token, create_access_token, create_refresh_
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate, UsuarioResponse
 from app.services.auth_service import authenticate_user, create_tokens
-from app.services.usuario_service import create_usuario
+from app.services.usuario_service import create_usuario, get_usuario_by_id
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 
 @router.post("/login")
@@ -42,15 +49,21 @@ async def register(
 
 @router.post("/refresh")
 async def refresh_token(
-    refresh_token: str,
+    payload: RefreshRequest,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    user_id = verify_token(refresh_token, token_type="refresh")
+    user_id = verify_token(payload.refresh_token, token_type="refresh")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = await get_usuario_by_id(db, uuid.UUID(user_id))
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user",
         )
     new_access_token = create_access_token(subject=user_id)
     new_refresh_token = create_refresh_token(subject=user_id)

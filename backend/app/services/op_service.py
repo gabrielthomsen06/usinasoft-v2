@@ -53,7 +53,7 @@ async def create_op(db: AsyncSession, data: OrdemProducaoCreate) -> OrdemProduca
         )
     op = OrdemProducao(**data.model_dump())
     db.add(op)
-    await db.commit()
+    await db.flush()
     await db.refresh(op)
     return await get_op_by_id(db, op.id)
 
@@ -62,14 +62,14 @@ async def update_op(db: AsyncSession, op_id: uuid.UUID, data: OrdemProducaoUpdat
     op = await get_op_by_id(db, op_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(op, field, value)
-    await db.commit()
+    await db.flush()
     return await get_op_by_id(db, op.id)
 
 
 async def delete_op(db: AsyncSession, op_id: uuid.UUID) -> None:
     op = await get_op_by_id(db, op_id)
     await db.delete(op)
-    await db.commit()
+    await db.flush()
 
 
 async def auto_update_op_status(db: AsyncSession, op_id: uuid.UUID) -> None:
@@ -96,4 +96,4 @@ async def auto_update_op_status(db: AsyncSession, op_id: uuid.UUID) -> None:
     else:
         op.status = OrdemProducaoStatus.aberta
 
-    await db.commit()
+    await db.flush()

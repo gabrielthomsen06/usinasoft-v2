@@ -50,7 +50,7 @@ async def list_lancamentos(
 async def create_lancamento(db: AsyncSession, data: LancamentoCreate) -> Lancamento:
     lancamento = Lancamento(**data.model_dump())
     db.add(lancamento)
-    await db.commit()
+    await db.flush()
     await db.refresh(lancamento)
     return lancamento
 
@@ -58,7 +58,7 @@ async def create_lancamento(db: AsyncSession, data: LancamentoCreate) -> Lancame
 async def delete_lancamento(db: AsyncSession, lancamento_id: uuid.UUID) -> None:
     lancamento = await get_lancamento_by_id(db, lancamento_id)
     await db.delete(lancamento)
-    await db.commit()
+    await db.flush()
 
 
 async def get_resumo(

@@ -51,7 +51,7 @@ async def create_peca(db: AsyncSession, data: PecaCreate) -> Peca:
     peca_data = data.model_dump()
     peca = Peca(**peca_data)
     db.add(peca)
-    await db.commit()
+    await db.flush()
     await db.refresh(peca)
     await auto_update_op_status(db, op.id)
     return peca
@@ -61,7 +61,7 @@ async def update_peca(db: AsyncSession, peca_id: uuid.UUID, data: PecaUpdate) ->
     peca = await get_peca_by_id(db, peca_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(peca, field, value)
-    await db.commit()
+    await db.flush()
     await db.refresh(peca)
     await auto_update_op_status(db, peca.ordem_producao_id)
     return peca
@@ -70,7 +70,7 @@ async def update_peca(db: AsyncSession, peca_id: uuid.UUID, data: PecaUpdate) ->
 async def update_peca_status(db: AsyncSession, peca_id: uuid.UUID, data: PecaStatusUpdate) -> Peca:
     peca = await get_peca_by_id(db, peca_id)
     peca.status = data.status
-    await db.commit()
+    await db.flush()
     await db.refresh(peca)
     await auto_update_op_status(db, peca.ordem_producao_id)
     return peca
@@ -80,5 +80,5 @@ async def delete_peca(db: AsyncSession, peca_id: uuid.UUID) -> None:
     peca = await get_peca_by_id(db, peca_id)
     op_id = peca.ordem_producao_id
     await db.delete(peca)
-    await db.commit()
+    await db.flush()
     await auto_update_op_status(db, op_id)

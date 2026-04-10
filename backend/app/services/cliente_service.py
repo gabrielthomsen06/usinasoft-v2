@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.models.cliente import Cliente
+from app.models.ordem_producao import OrdemProducao
+from app.models.peca import Peca
 from app.schemas.cliente import ClienteCreate, ClienteUpdate
 
 
@@ -27,7 +29,7 @@ async def list_clientes(db: AsyncSession, skip: int = 0, limit: int = 100) -> Li
 async def create_cliente(db: AsyncSession, data: ClienteCreate) -> Cliente:
     cliente = Cliente(**data.model_dump())
     db.add(cliente)
-    await db.commit()
+    await db.flush()
     await db.refresh(cliente)
     return cliente
 
@@ -38,12 +40,31 @@ async def update_cliente(
     cliente = await get_cliente_by_id(db, cliente_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(cliente, field, value)
-    await db.commit()
+    await db.flush()
     await db.refresh(cliente)
     return cliente
 
 
 async def delete_cliente(db: AsyncSession, cliente_id: uuid.UUID) -> None:
     cliente = await get_cliente_by_id(db, cliente_id)
+
+    ops_result = await db.execute(
+        select(OrdemProducao).where(OrdemProducao.cliente_id == cliente_id).limit(1)
+    )
+    if ops_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Não é possível excluir o cliente pois existem Ordens de Produção vinculadas.",
+        )
+
+    pecas_result = await db.execute(
+        select(Peca).where(Peca.cliente_id == cliente_id).limit(1)
+    )
+    if pecas_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Não é possível excluir o cliente pois existem Peças vinculadas.",
+        )
+
     await db.delete(cliente)
-    await db.commit()
+    await db.flush()

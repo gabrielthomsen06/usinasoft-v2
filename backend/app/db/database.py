@@ -30,5 +30,3 @@ async def get_db() -> AsyncSession:  # type: ignore[misc]
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
