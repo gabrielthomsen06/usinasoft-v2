@@ -8,7 +8,8 @@ from app.schemas.fornecedor import FornecedorResponse
 
 ContaPagarStatus = Literal["pendente", "pago", "vencido", "cancelado"]
 ContaPagarCategoria = Literal[
-    "fornecedor", "aluguel", "salario", "servico", "imposto", "manutencao", "outros"
+    "material", "servicos", "fixas", "impostos", "carro", "gasolina",
+    "salario", "aluguel", "patrimonio", "outros",
 ]
 
 
