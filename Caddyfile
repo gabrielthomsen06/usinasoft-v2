@@ -1,6 +1,10 @@
-{$DOMAIN} {
+{$DOMAIN}, www.{$DOMAIN} {
     # HTTPS automático via Let's Encrypt
     tls {$SSL_EMAIL}
+
+    # Redireciona www → apex
+    @www host www.{$DOMAIN}
+    redir @www https://{$DOMAIN}{uri} permanent
 
     # Frontend (SPA)
     handle {

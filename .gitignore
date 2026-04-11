@@ -36,3 +36,8 @@ Thumbs.db
 # Caddy
 caddy_data/
 caddy_config/
+
+# Documentação e scripts locais (não fazem parte da aplicação)
+*.pdf
+gerar_pdf.py
+orcamento_modulo_financeiro.py
