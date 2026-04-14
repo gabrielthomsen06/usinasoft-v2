@@ -41,7 +41,10 @@ export const contasReceberService = {
     return data;
   },
 
-  async update(id: string, payload: Partial<ContaReceberPayload & { status: string; data_pagamento: string | null }>): Promise<ContaReceber> {
+  async update(
+    id: string,
+    payload: Partial<ContaReceberPayload & { status: string; data_pagamento: string | null; recalcular_parcelas_futuras: boolean }>
+  ): Promise<ContaReceber> {
     const { data } = await api.put<ContaReceber>(`/contas-receber/${id}`, payload);
     return data;
   },

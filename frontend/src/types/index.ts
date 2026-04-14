@@ -71,6 +71,8 @@ export interface ContaReceber {
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   parcela_atual: number;
   total_parcelas: number;
+  grupo_parcelas_id?: string;
+  intervalo_dias?: number;
   observacoes?: string;
   created_at: string;
   updated_at: string;
@@ -89,6 +91,8 @@ export interface ContaPagar {
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   parcela_atual: number;
   total_parcelas: number;
+  grupo_parcelas_id?: string;
+  intervalo_dias?: number;
   observacoes?: string;
   created_at: string;
   updated_at: string;

@@ -41,7 +41,10 @@ export const contasPagarService = {
     return data;
   },
 
-  async update(id: string, payload: Partial<ContaPagarPayload & { status: string; data_pagamento: string | null }>): Promise<ContaPagar> {
+  async update(
+    id: string,
+    payload: Partial<ContaPagarPayload & { status: string; data_pagamento: string | null; recalcular_parcelas_futuras: boolean }>
+  ): Promise<ContaPagar> {
     const { data } = await api.put<ContaPagar>(`/contas-pagar/${id}`, payload);
     return data;
   },
