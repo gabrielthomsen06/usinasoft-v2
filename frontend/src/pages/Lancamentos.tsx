@@ -3,6 +3,8 @@ import { Plus, X, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { lancamentosService, LancamentoPayload } from '../services/lancamentos';
 import { Lancamento, ResumoFinanceiro } from '../types';
+import { MonthNavigator } from '../components/ui/MonthNavigator';
+import { getCurrentMonth, getMonthRange } from '../lib/monthRange';
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -21,8 +23,7 @@ export function Lancamentos() {
   const [items, setItems] = useState<Lancamento[]>([]);
   const [resumo, setResumo] = useState<ResumoFinanceiro>({ total_receitas: 0, total_despesas: 0, saldo: 0 });
   const [tipoFilter, setTipoFilter] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [mesAno, setMesAno] = useState(getCurrentMonth());
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<LancamentoPayload>(emptyForm);
@@ -30,14 +31,13 @@ export function Lancamentos() {
 
   const load = async () => {
     try {
-      const filters: Record<string, string> = {};
+      const { inicio, fim } = getMonthRange(mesAno.mes, mesAno.ano);
+      const filters: Record<string, string> = { data_inicio: inicio, data_fim: fim };
       if (tipoFilter) filters.tipo = tipoFilter;
-      if (dataInicio) filters.data_inicio = dataInicio;
-      if (dataFim) filters.data_fim = dataFim;
 
       const [lancs, res] = await Promise.all([
-        lancamentosService.list(Object.keys(filters).length ? filters : undefined),
-        lancamentosService.resumo(dataInicio || dataFim ? { data_inicio: dataInicio || undefined, data_fim: dataFim || undefined } : undefined),
+        lancamentosService.list(filters),
+        lancamentosService.resumo({ data_inicio: inicio, data_fim: fim }),
       ]);
       setItems(lancs);
       setResumo(res);
@@ -48,7 +48,7 @@ export function Lancamentos() {
     }
   };
 
-  useEffect(() => { load(); }, [tipoFilter, dataInicio, dataFim]);
+  useEffect(() => { load(); }, [tipoFilter, mesAno.mes, mesAno.ano]);
 
   // Group by date
   const grouped = items.reduce<Record<string, Lancamento[]>>((acc, l) => {
@@ -123,12 +123,8 @@ export function Lancamentos() {
             </button>
           ))}
         </div>
-        <div className="flex gap-2 ml-auto">
-          <input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); setIsLoading(true); }}
-            className="bg-white border border-gray-200/60 rounded-md px-3 py-2 text-[14px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
-          <span className="flex items-center text-gray-300 text-[14px]">até</span>
-          <input type="date" value={dataFim} onChange={(e) => { setDataFim(e.target.value); setIsLoading(true); }}
-            className="bg-white border border-gray-200/60 rounded-md px-3 py-2 text-[14px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
+        <div className="ml-auto">
+          <MonthNavigator mes={mesAno.mes} ano={mesAno.ano} onChange={(m, a) => { setMesAno({ mes: m, ano: a }); setIsLoading(true); }} />
         </div>
       </div>
 
