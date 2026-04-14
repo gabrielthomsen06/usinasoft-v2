@@ -4,6 +4,8 @@ import { useToast } from '../components/ui/Toast';
 import { contasReceberService, ContaReceberPayload } from '../services/contasReceber';
 import { clientesService } from '../services/clientes';
 import { ContaReceber, Cliente } from '../types';
+import { MonthNavigator } from '../components/ui/MonthNavigator';
+import { getCurrentMonth, getMonthRange } from '../lib/monthRange';
 
 const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
   pendente: { label: 'Pendente', color: 'text-amber-700', bg: 'bg-amber-50' },
@@ -33,11 +35,18 @@ export function ContasReceber() {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
+  const [mesAno, setMesAno] = useState(getCurrentMonth());
+  const [vencimentoEditadoManual, setVencimentoEditadoManual] = useState(false);
+  const [recalcularFuturas, setRecalcularFuturas] = useState(true);
+  const [editingItem, setEditingItem] = useState<ContaReceber | null>(null);
 
   const load = async () => {
     try {
+      const { inicio, fim } = getMonthRange(mesAno.mes, mesAno.ano);
+      const filters: Record<string, string> = { data_inicio: inicio, data_fim: fim };
+      if (statusFilter) filters.status = statusFilter;
       const [contas, cls] = await Promise.all([
-        contasReceberService.list(statusFilter ? { status: statusFilter } : undefined),
+        contasReceberService.list(filters),
         clientesService.list(),
       ]);
       setItems(contas);
@@ -49,7 +58,7 @@ export function ContasReceber() {
     }
   };
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => { load(); }, [statusFilter, mesAno.mes, mesAno.ano]);
 
   const filtered = items.filter((c) => {
     const q = search.toLowerCase();
@@ -63,13 +72,29 @@ export function ContasReceber() {
     vencido: items.filter((c) => c.status === 'vencido').reduce((s, c) => s + c.valor, 0),
   };
 
-  const openCreate = () => { setEditingId(null); setForm(emptyForm); setShowModal(true); };
+  const openCreate = () => {
+    setEditingId(null);
+    setEditingItem(null);
+    setForm(emptyForm);
+    setVencimentoEditadoManual(false);
+    setRecalcularFuturas(true);
+    setShowModal(true);
+  };
   const openEdit = (c: ContaReceber) => {
     setEditingId(c.id);
+    setEditingItem(c);
     setForm({
-      descricao: c.descricao, cliente_id: c.cliente_id, ordem_producao_id: c.ordem_producao_id,
-      valor: c.valor, data_emissao: c.data_emissao, data_vencimento: c.data_vencimento, observacoes: c.observacoes ?? '',
+      descricao: c.descricao,
+      cliente_id: c.cliente_id,
+      ordem_producao_id: c.ordem_producao_id,
+      valor: c.valor,
+      data_emissao: c.data_emissao,
+      data_vencimento: c.data_vencimento,
+      intervalo_dias: c.intervalo_dias,
+      observacoes: c.observacoes ?? '',
     });
+    setVencimentoEditadoManual(true);
+    setRecalcularFuturas(true);
     setShowModal(true);
   };
   const closeModal = () => { setShowModal(false); setForm(emptyForm); setEditingId(null); };
@@ -81,7 +106,12 @@ export function ContasReceber() {
     try {
       const payload = { ...form, valor: Number(form.valor) };
       if (editingId) {
-        await contasReceberService.update(editingId, payload);
+        const podeCascata =
+          editingItem?.parcela_atual === 1 && (editingItem?.total_parcelas ?? 1) > 1;
+        await contasReceberService.update(editingId, {
+          ...payload,
+          ...(podeCascata ? { recalcular_parcelas_futuras: recalcularFuturas } : {}),
+        });
         toast('success', 'Conta atualizada!');
       } else {
         const created = await contasReceberService.create(payload);
@@ -146,6 +176,10 @@ export function ContasReceber() {
         <button onClick={openCreate} className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors">
           <Plus size={14} /> Nova Conta
         </button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <MonthNavigator mes={mesAno.mes} ano={mesAno.ano} onChange={(m, a) => { setMesAno({ mes: m, ano: a }); setIsLoading(true); }} />
       </div>
 
       {/* Summary cards */}
@@ -298,7 +332,13 @@ export function ContasReceber() {
                 </div>
                 <div>
                   <label className="block text-[14px] font-medium text-gray-500 mb-1">1º Vencimento <span className="text-red-400">*</span></label>
-                  <input type="date" required value={form.data_vencimento} onChange={(e) => setForm({ ...form, data_vencimento: e.target.value })}
+                  <input
+                    type="date" required
+                    value={form.data_vencimento}
+                    onChange={(e) => {
+                      setVencimentoEditadoManual(true);
+                      setForm({ ...form, data_vencimento: e.target.value });
+                    }}
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
                 </div>
               </div>
@@ -311,10 +351,38 @@ export function ContasReceber() {
                   </div>
                   <div>
                     <label className="block text-[14px] font-medium text-gray-500 mb-1">Intervalo (dias)</label>
-                    <input type="number" min="0" max="365" placeholder="Deixe vazio para mensal" value={form.intervalo_dias ?? ''} onChange={(e) => setForm({ ...form, intervalo_dias: e.target.value === '' ? undefined : parseInt(e.target.value) })}
+                    <input type="number" min="0" max="365" placeholder="Deixe vazio para mensal" value={form.intervalo_dias ?? ''} onChange={(e) => {
+                      const raw = e.target.value;
+                      const novoIntervalo = raw === '' ? undefined : parseInt(raw);
+                      setForm((prev) => {
+                        const next = { ...prev, intervalo_dias: novoIntervalo };
+                        if (!vencimentoEditadoManual && novoIntervalo !== undefined) {
+                          const hoje = new Date();
+                          hoje.setDate(hoje.getDate() + novoIntervalo);
+                          next.data_vencimento = hoje.toISOString().slice(0, 10);
+                        }
+                        return next;
+                      });
+                    }}
                       className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
                   </div>
                 </div>
+              )}
+              {editingId && (
+                <div>
+                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Intervalo (dias)</label>
+                  <input type="number" min="0" max="365" placeholder="Deixe vazio para mensal" value={form.intervalo_dias ?? ''} onChange={(e) => setForm({ ...form, intervalo_dias: e.target.value === '' ? undefined : parseInt(e.target.value) })}
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
+                </div>
+              )}
+              {editingId && editingItem?.parcela_atual === 1 && (editingItem?.total_parcelas ?? 1) > 1 && (
+                <label className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 cursor-pointer">
+                  <input type="checkbox" checked={recalcularFuturas} onChange={(e) => setRecalcularFuturas(e.target.checked)} className="mt-0.5" />
+                  <span className="text-[13px] text-amber-800">
+                    <span className="font-semibold">Recalcular parcelas futuras (2..{editingItem?.total_parcelas}).</span>{' '}
+                    As próximas parcelas serão recalculadas com o novo 1º vencimento e intervalo. Parcelas já pagas são mantidas.
+                  </span>
+                </label>
               )}
               {!editingId && (form.total_parcelas ?? 1) > 1 && form.valor > 0 && (
                 <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
