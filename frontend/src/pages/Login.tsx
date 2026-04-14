@@ -34,7 +34,7 @@ export function Login() {
       toast('success', 'Login realizado com sucesso!');
       navigate('/pecas');
     } catch {
-      toast('error', 'E-mail ou senha inválidos. Tente novamente.');
+      toast('error', 'Usuário ou senha inválidos. Tente novamente.');
     }
   };
 
@@ -74,9 +74,8 @@ export function Login() {
           </div>
           <div>
             <span className="font-extrabold text-3xl text-white tracking-tight">
-              usi<span className="text-accent">port</span>
+              LSC <span className="text-accent">Usinagem</span>
             </span>
-            <p className="text-accent/70 text-[12px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
           </div>
         </div>
 
@@ -120,7 +119,7 @@ export function Login() {
         </div>
 
         <p className="text-primary-300/40 text-[14px] relative z-10">
-          © {new Date().getFullYear()} Usiport — Todos os direitos reservados
+          © {new Date().getFullYear()} LSC Usinagem — Todos os direitos reservados
         </p>
       </div>
 
@@ -137,10 +136,9 @@ export function Login() {
             </div>
             <div>
               <span className="font-extrabold text-2xl text-primary tracking-tight">
-                usi<span className="text-accent">port</span>
+                LSC <span className="text-accent">Usinagem</span>
               </span>
-              <p className="text-accent/70 text-[12px] font-bold tracking-[0.35em] uppercase">All-in-One</p>
-            </div>
+              </div>
           </div>
 
           {/* Form card */}
@@ -154,7 +152,7 @@ export function Login() {
               {/* Email field */}
               <div>
                 <label htmlFor="email" className="text-[14px] font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
-                  E-mail
+                  Usuário
                 </label>
                 <div className="relative group">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary transition-colors duration-200 pointer-events-none">
@@ -246,7 +244,7 @@ export function Login() {
 
           {/* Bottom text */}
           <p className="text-center text-[14px] text-gray-300 mt-8 lg:hidden">
-            © {new Date().getFullYear()} Usiport — Todos os direitos reservados
+            © {new Date().getFullYear()} LSC Usinagem — Todos os direitos reservados
           </p>
         </div>
       </div>

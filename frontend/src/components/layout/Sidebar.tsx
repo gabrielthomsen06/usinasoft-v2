@@ -55,7 +55,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Ship size={14} className="text-[#1a2340]" />
           </div>
           <span className="font-bold text-[15px] text-white/90 tracking-tight">
-            usi<span className="text-accent">port</span>
+            LSC <span className="text-accent">Usinagem</span>
           </span>
         </div>
 
