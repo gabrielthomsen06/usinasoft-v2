@@ -35,6 +35,10 @@ class ContaReceber(Base):
     )
     parcela_atual: Mapped[int] = mapped_column(default=1, server_default="1", nullable=False)
     total_parcelas: Mapped[int] = mapped_column(default=1, server_default="1", nullable=False)
+    grupo_parcelas_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
+    intervalo_dias: Mapped[Optional[int]] = mapped_column(nullable=True)
     observacoes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
