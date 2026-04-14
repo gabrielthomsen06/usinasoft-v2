@@ -33,6 +33,8 @@ class ContaReceber(Base):
     status: Mapped[str] = mapped_column(
         String(20), default="pendente", server_default="pendente", nullable=False
     )
+    parcela_atual: Mapped[int] = mapped_column(default=1, server_default="1", nullable=False)
+    total_parcelas: Mapped[int] = mapped_column(default=1, server_default="1", nullable=False)
     observacoes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

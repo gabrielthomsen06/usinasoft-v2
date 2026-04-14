@@ -8,6 +8,8 @@ export interface ContaReceberPayload {
   valor: number;
   data_emissao: string;
   data_vencimento: string;
+  total_parcelas?: number;
+  intervalo_dias?: number;
   observacoes?: string;
 }
 
@@ -34,12 +36,12 @@ export const contasReceberService = {
     return data;
   },
 
-  async create(payload: ContaReceberPayload): Promise<ContaReceber> {
-    const { data } = await api.post<ContaReceber>('/contas-receber/', payload);
+  async create(payload: ContaReceberPayload): Promise<ContaReceber[]> {
+    const { data } = await api.post<ContaReceber[]>('/contas-receber/', payload);
     return data;
   },
 
-  async update(id: string, payload: Partial<ContaReceberPayload & { status: string; data_pagamento: string }>): Promise<ContaReceber> {
+  async update(id: string, payload: Partial<ContaReceberPayload & { status: string; data_pagamento: string | null }>): Promise<ContaReceber> {
     const { data } = await api.put<ContaReceber>(`/contas-receber/${id}`, payload);
     return data;
   },

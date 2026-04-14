@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.cliente import ClienteResponse
 
@@ -20,7 +20,8 @@ class ContaReceberBase(BaseModel):
 
 
 class ContaReceberCreate(ContaReceberBase):
-    pass
+    total_parcelas: int = Field(1, ge=1)
+    intervalo_dias: Optional[int] = Field(None, ge=0)
 
 
 class ContaReceberUpdate(BaseModel):
@@ -39,6 +40,8 @@ class ContaReceberResponse(ContaReceberBase):
     id: uuid.UUID
     data_pagamento: Optional[date] = None
     status: ContaReceberStatus
+    parcela_atual: int = 1
+    total_parcelas: int = 1
     created_at: datetime
     updated_at: datetime
     cliente: Optional[ClienteResponse] = None

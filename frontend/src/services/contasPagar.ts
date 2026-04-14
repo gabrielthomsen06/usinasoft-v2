@@ -9,6 +9,7 @@ export interface ContaPagarPayload {
   data_vencimento: string;
   categoria: string;
   total_parcelas?: number;
+  intervalo_dias?: number;
   observacoes?: string;
 }
 
@@ -40,7 +41,7 @@ export const contasPagarService = {
     return data;
   },
 
-  async update(id: string, payload: Partial<ContaPagarPayload & { status: string; data_pagamento: string }>): Promise<ContaPagar> {
+  async update(id: string, payload: Partial<ContaPagarPayload & { status: string; data_pagamento: string | null }>): Promise<ContaPagar> {
     const { data } = await api.put<ContaPagar>(`/contas-pagar/${id}`, payload);
     return data;
   },

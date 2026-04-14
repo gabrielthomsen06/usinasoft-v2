@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Search, CheckCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Search, CheckCircle, RotateCcw } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { contasPagarService, ContaPagarPayload } from '../services/contasPagar';
 import { fornecedoresService } from '../services/fornecedores';
@@ -26,7 +26,7 @@ const categoriaLabels: Record<string, { label: string; color: string; bg: string
 };
 
 const emptyForm: ContaPagarPayload = {
-  descricao: '', fornecedor_id: '', valor: 0, data_emissao: new Date().toISOString().slice(0, 10), data_vencimento: '', categoria: 'outros', total_parcelas: 1, observacoes: '',
+  descricao: '', fornecedor_id: '', valor: 0, data_emissao: new Date().toISOString().slice(0, 10), data_vencimento: '', categoria: 'outros', total_parcelas: 1, intervalo_dias: undefined, observacoes: '',
 };
 
 function formatCurrency(value: number) {
@@ -46,6 +46,7 @@ export function ContasPagar() {
   const [form, setForm] = useState<ContaPagarPayload>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -121,6 +122,18 @@ export function ContasPagar() {
       load();
     } catch {
       toast('error', 'Erro ao atualizar conta');
+    }
+  };
+
+  const handleUndoPayment = async (id: string) => {
+    try {
+      await contasPagarService.update(id, { status: 'pendente', data_pagamento: null });
+      toast('success', 'Pagamento desfeito!');
+      setUndoConfirmId(null);
+      setIsLoading(true);
+      load();
+    } catch {
+      toast('error', 'Erro ao desfazer pagamento');
     }
   };
 
@@ -242,6 +255,9 @@ export function ContasPagar() {
                           {c.status === 'pendente' && (
                             <button onClick={() => handleMarkPaid(c.id)} className="p-1.5 text-gray-300 hover:text-emerald-600 rounded transition-colors" title="Marcar como pago"><CheckCircle size={14} /></button>
                           )}
+                          {c.status === 'pago' && (
+                            <button onClick={() => setUndoConfirmId(c.id)} className="p-1.5 text-gray-300 hover:text-amber-600 rounded transition-colors" title="Desfazer pagamento"><RotateCcw size={14} /></button>
+                          )}
                           <button onClick={() => openEdit(c)} className="p-1.5 text-gray-300 hover:text-gray-600 rounded transition-colors" title="Editar"><Pencil size={14} /></button>
                           <button onClick={() => handleDelete(c.id)} disabled={deletingId === c.id} className="p-1.5 text-gray-300 hover:text-red-500 rounded transition-colors disabled:opacity-50" title="Excluir"><Trash2 size={14} /></button>
                         </div>
@@ -254,6 +270,24 @@ export function ContasPagar() {
           </div>
         )}
       </div>
+
+      {/* Undo payment confirmation */}
+      {undoConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h2 className="text-[16px] font-semibold text-gray-900">Desfazer pagamento?</h2>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-[14px] text-gray-600">Tem certeza que deseja desfazer o pagamento desta conta? O lançamento correspondente será removido do fluxo de caixa.</p>
+            </div>
+            <div className="px-5 py-3 border-t border-gray-100 flex gap-2.5">
+              <button onClick={() => setUndoConfirmId(null)} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button onClick={() => handleUndoPayment(undoConfirmId)} className="flex-1 bg-amber-600 text-white py-2 rounded-md text-[15px] font-medium hover:bg-amber-700 transition-colors">Desfazer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -295,19 +329,12 @@ export function ContasPagar() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[14px] font-medium text-gray-500 mb-1">Valor Total <span className="text-red-400">*</span></label>
                   <input type="number" required step="0.01" min="0" value={form.valor || ''} onChange={(e) => setForm({ ...form, valor: parseFloat(e.target.value) || 0 })}
                     placeholder="0,00" className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
                 </div>
-                {!editingId && (
-                  <div>
-                    <label className="block text-[14px] font-medium text-gray-500 mb-1">Parcelas</label>
-                    <input type="number" min="1" max="48" value={form.total_parcelas || 1} onChange={(e) => setForm({ ...form, total_parcelas: parseInt(e.target.value) || 1 })}
-                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
-                  </div>
-                )}
                 <div>
                   <label className="block text-[14px] font-medium text-gray-500 mb-1">Emissão</label>
                   <input type="date" value={form.data_emissao} onChange={(e) => setForm({ ...form, data_emissao: e.target.value })}
@@ -319,10 +346,30 @@ export function ContasPagar() {
                     className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
                 </div>
               </div>
+              {!editingId && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[14px] font-medium text-gray-500 mb-1">Parcelas</label>
+                    <input type="number" min="1" max="48" value={form.total_parcelas || 1} onChange={(e) => setForm({ ...form, total_parcelas: parseInt(e.target.value) || 1 })}
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-[14px] font-medium text-gray-500 mb-1">Intervalo (dias)</label>
+                    <input type="number" min="0" max="365" placeholder="Deixe vazio para mensal" value={form.intervalo_dias ?? ''} onChange={(e) => setForm({ ...form, intervalo_dias: e.target.value === '' ? undefined : parseInt(e.target.value) })}
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-300 transition-colors" />
+                  </div>
+                </div>
+              )}
               {!editingId && (form.total_parcelas ?? 1) > 1 && form.valor > 0 && (
                 <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
                   <p className="text-[13px] text-blue-700 font-medium">
-                    {form.total_parcelas}x de {formatCurrency(Math.round((form.valor / (form.total_parcelas ?? 1)) * 100) / 100)} — Vencimentos mensais a partir de {form.data_vencimento ? new Date(form.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '...'}
+                    {form.total_parcelas}x de {formatCurrency(Math.round((form.valor / (form.total_parcelas ?? 1)) * 100) / 100)}
+                    {' — '}
+                    {form.intervalo_dias !== undefined
+                      ? `Vencimentos a cada ${form.intervalo_dias} dias`
+                      : 'Vencimentos mensais'}
+                    {' a partir de '}
+                    {form.data_vencimento ? new Date(form.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '...'}
                   </p>
                 </div>
               )}

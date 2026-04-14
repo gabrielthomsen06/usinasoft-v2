@@ -1,7 +1,8 @@
 import uuid
-from datetime import date, date as date_type
+from datetime import date, date as date_type, timedelta
 from typing import List, Optional
 
+from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException, status
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,12 +60,38 @@ async def list_contas_receber(
     return list(result.scalars().all())
 
 
-async def create_conta_receber(db: AsyncSession, data: ContaReceberCreate) -> ContaReceber:
-    conta = ContaReceber(**data.model_dump())
-    db.add(conta)
+async def create_conta_receber(db: AsyncSession, data: ContaReceberCreate) -> List[ContaReceber]:
+    total_parcelas = max(data.total_parcelas, 1)
+    intervalo_dias = data.intervalo_dias
+    base_data = data.model_dump(exclude={"total_parcelas", "intervalo_dias"})
+    valor_total = base_data["valor"]
+    valor_parcela = round(valor_total / total_parcelas, 2)
+    valor_ultima = round(valor_total - valor_parcela * (total_parcelas - 1), 2)
+
+    contas: List[ContaReceber] = []
+    for i in range(total_parcelas):
+        if intervalo_dias is not None:
+            vencimento = data.data_vencimento + timedelta(days=intervalo_dias * i)
+        else:
+            vencimento = data.data_vencimento + relativedelta(months=i)
+        conta = ContaReceber(
+            **{
+                **base_data,
+                "valor": valor_parcela if i < total_parcelas - 1 else valor_ultima,
+                "data_vencimento": vencimento,
+                "parcela_atual": i + 1,
+                "total_parcelas": total_parcelas,
+            }
+        )
+        if total_parcelas > 1:
+            conta.descricao = f"{base_data['descricao']} ({i + 1}/{total_parcelas})"
+        db.add(conta)
+        contas.append(conta)
+
     await db.flush()
-    await db.refresh(conta)
-    return conta
+    for c in contas:
+        await db.refresh(c)
+    return contas
 
 
 async def update_conta_receber(
@@ -74,14 +101,13 @@ async def update_conta_receber(
 
     update_data = data.model_dump(exclude_unset=True)
 
-    # Auto-create lancamento when marking as paid
-    was_pending = conta.status != "pago"
-    new_status = update_data.get("status")
+    was_paid = conta.status == "pago"
+    new_status = update_data.get("status", conta.status)
 
     for field, value in update_data.items():
         setattr(conta, field, value)
 
-    if was_pending and new_status == "pago":
+    if not was_paid and new_status == "pago":
         if not conta.data_pagamento:
             conta.data_pagamento = date.today()
         existing_lanc = await db.execute(
@@ -96,6 +122,13 @@ async def update_conta_receber(
                 conta_receber_id=conta.id,
             )
             db.add(lancamento)
+    elif was_paid and new_status != "pago":
+        result = await db.execute(
+            select(Lancamento).where(Lancamento.conta_receber_id == conta.id)
+        )
+        for lanc in result.scalars().all():
+            await db.delete(lanc)
+        conta.data_pagamento = None
 
     await db.flush()
     await db.refresh(conta)
@@ -104,7 +137,6 @@ async def update_conta_receber(
 
 async def delete_conta_receber(db: AsyncSession, conta_id: uuid.UUID) -> None:
     conta = await get_conta_receber_by_id(db, conta_id)
-    # Deletar lançamentos vinculados primeiro (FK constraint)
     result = await db.execute(
         select(Lancamento).where(Lancamento.conta_receber_id == conta_id)
     )

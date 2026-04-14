@@ -1,6 +1,6 @@
 import math
 import uuid
-from datetime import date
+from datetime import date, timedelta
 from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -66,7 +66,8 @@ async def list_contas_pagar(
 
 async def create_conta_pagar(db: AsyncSession, data: ContaPagarCreate) -> List[ContaPagar]:
     total_parcelas = max(data.total_parcelas, 1)
-    base_data = data.model_dump(exclude={"total_parcelas"})
+    intervalo_dias = data.intervalo_dias
+    base_data = data.model_dump(exclude={"total_parcelas", "intervalo_dias"})
     valor_total = base_data["valor"]
     valor_parcela = round(valor_total / total_parcelas, 2)
     # Ajustar centavos na última parcela
@@ -74,7 +75,10 @@ async def create_conta_pagar(db: AsyncSession, data: ContaPagarCreate) -> List[C
 
     contas: List[ContaPagar] = []
     for i in range(total_parcelas):
-        vencimento = data.data_vencimento + relativedelta(months=i)
+        if intervalo_dias is not None:
+            vencimento = data.data_vencimento + timedelta(days=intervalo_dias * i)
+        else:
+            vencimento = data.data_vencimento + relativedelta(months=i)
         conta = ContaPagar(
             **{
                 **base_data,
@@ -102,13 +106,13 @@ async def update_conta_pagar(
 
     update_data = data.model_dump(exclude_unset=True)
 
-    was_pending = conta.status != "pago"
-    new_status = update_data.get("status")
+    was_paid = conta.status == "pago"
+    new_status = update_data.get("status", conta.status)
 
     for field, value in update_data.items():
         setattr(conta, field, value)
 
-    if was_pending and new_status == "pago":
+    if not was_paid and new_status == "pago":
         if not conta.data_pagamento:
             conta.data_pagamento = date.today()
         existing_lanc = await db.execute(
@@ -123,6 +127,13 @@ async def update_conta_pagar(
                 conta_pagar_id=conta.id,
             )
             db.add(lancamento)
+    elif was_paid and new_status != "pago":
+        result = await db.execute(
+            select(Lancamento).where(Lancamento.conta_pagar_id == conta.id)
+        )
+        for lanc in result.scalars().all():
+            await db.delete(lanc)
+        conta.data_pagamento = None
 
     await db.flush()
     await db.refresh(conta)

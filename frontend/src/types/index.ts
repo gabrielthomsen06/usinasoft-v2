@@ -69,6 +69,8 @@ export interface ContaReceber {
   data_vencimento: string;
   data_pagamento?: string;
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  parcela_atual: number;
+  total_parcelas: number;
   observacoes?: string;
   created_at: string;
   updated_at: string;

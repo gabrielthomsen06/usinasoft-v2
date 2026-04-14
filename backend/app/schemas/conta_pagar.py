@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.fornecedor import FornecedorResponse
 
@@ -24,7 +24,8 @@ class ContaPagarBase(BaseModel):
 
 
 class ContaPagarCreate(ContaPagarBase):
-    total_parcelas: int = 1
+    total_parcelas: int = Field(1, ge=1)
+    intervalo_dias: Optional[int] = Field(None, ge=0)
 
 
 class ContaPagarUpdate(BaseModel):

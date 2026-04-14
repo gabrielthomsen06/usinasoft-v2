@@ -36,12 +36,12 @@ async def list_all_contas_receber(
     )
 
 
-@router.post("/", response_model=ContaReceberResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=List[ContaReceberResponse], status_code=status.HTTP_201_CREATED)
 async def create_conta_receber_route(
     data: ContaReceberCreate,
     db: AsyncSession = Depends(get_db),
     _: Usuario = Depends(get_current_admin_user),
-) -> ContaReceberResponse:
+) -> List[ContaReceberResponse]:
     return await create_conta_receber(db, data)
 
 
