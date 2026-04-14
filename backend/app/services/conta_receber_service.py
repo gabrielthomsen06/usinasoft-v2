@@ -104,9 +104,13 @@ async def update_conta_receber(
     conta = await get_conta_receber_by_id(db, conta_id)
 
     update_data = data.model_dump(exclude_unset=True)
+    recalcular = update_data.pop("recalcular_parcelas_futuras", False)
 
     was_paid = conta.status == "pago"
     new_status = update_data.get("status", conta.status)
+
+    novo_vencimento = update_data.get("data_vencimento", conta.data_vencimento)
+    novo_intervalo = update_data.get("intervalo_dias", conta.intervalo_dias)
 
     for field, value in update_data.items():
         setattr(conta, field, value)
@@ -133,6 +137,27 @@ async def update_conta_receber(
         for lanc in result.scalars().all():
             await db.delete(lanc)
         conta.data_pagamento = None
+
+    if (
+        recalcular
+        and conta.parcela_atual == 1
+        and conta.grupo_parcelas_id is not None
+        and novo_intervalo is not None
+    ):
+        irmas_result = await db.execute(
+            select(ContaReceber).where(
+                and_(
+                    ContaReceber.grupo_parcelas_id == conta.grupo_parcelas_id,
+                    ContaReceber.parcela_atual > 1,
+                    ContaReceber.status != "pago",
+                )
+            )
+        )
+        for irma in irmas_result.scalars().all():
+            irma.data_vencimento = novo_vencimento + timedelta(
+                days=novo_intervalo * (irma.parcela_atual - 1)
+            )
+            irma.intervalo_dias = novo_intervalo
 
     await db.flush()
     await db.refresh(conta)
