@@ -38,6 +38,8 @@ class ContaPagarUpdate(BaseModel):
     categoria: Optional[ContaPagarCategoria] = None
     status: Optional[ContaPagarStatus] = None
     observacoes: Optional[str] = None
+    intervalo_dias: Optional[int] = Field(None, ge=0)
+    recalcular_parcelas_futuras: bool = False
 
 
 class ContaPagarResponse(ContaPagarBase):
@@ -46,6 +48,8 @@ class ContaPagarResponse(ContaPagarBase):
     status: ContaPagarStatus
     parcela_atual: int = 1
     total_parcelas: int = 1
+    grupo_parcelas_id: Optional[uuid.UUID] = None
+    intervalo_dias: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     fornecedor: Optional[FornecedorResponse] = None

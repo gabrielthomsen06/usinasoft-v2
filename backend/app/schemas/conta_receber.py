@@ -34,6 +34,8 @@ class ContaReceberUpdate(BaseModel):
     data_pagamento: Optional[date] = None
     status: Optional[ContaReceberStatus] = None
     observacoes: Optional[str] = None
+    intervalo_dias: Optional[int] = Field(None, ge=0)
+    recalcular_parcelas_futuras: bool = False
 
 
 class ContaReceberResponse(ContaReceberBase):
@@ -42,6 +44,8 @@ class ContaReceberResponse(ContaReceberBase):
     status: ContaReceberStatus
     parcela_atual: int = 1
     total_parcelas: int = 1
+    grupo_parcelas_id: Optional[uuid.UUID] = None
+    intervalo_dias: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     cliente: Optional[ClienteResponse] = None
