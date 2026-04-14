@@ -68,6 +68,8 @@ async def create_conta_receber(db: AsyncSession, data: ContaReceberCreate) -> Li
     valor_parcela = round(valor_total / total_parcelas, 2)
     valor_ultima = round(valor_total - valor_parcela * (total_parcelas - 1), 2)
 
+    grupo_id = uuid.uuid4() if total_parcelas > 1 else None
+
     contas: List[ContaReceber] = []
     for i in range(total_parcelas):
         if intervalo_dias is not None:
@@ -81,6 +83,8 @@ async def create_conta_receber(db: AsyncSession, data: ContaReceberCreate) -> Li
                 "data_vencimento": vencimento,
                 "parcela_atual": i + 1,
                 "total_parcelas": total_parcelas,
+                "grupo_parcelas_id": grupo_id,
+                "intervalo_dias": intervalo_dias,
             }
         )
         if total_parcelas > 1:
