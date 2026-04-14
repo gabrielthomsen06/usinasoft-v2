@@ -1,184 +1,233 @@
 # Mapeamento de Melhorias — UsinaSoft v2
 
-Levantamento completo de melhorias possiveis, organizadas por prioridade e area.
+Roadmap de evolucao do sistema apos o deploy em producao e o fechamento do modulo financeiro. Ideias agrupadas por area, com prioridade sugerida.
+
+Ultima atualizacao: 2026-04-14
 
 ---
 
-## Prioridade ALTA (Impacto direto no uso diario)
+## 1. Integracao Producao <-> Financeiro (ALTA)
 
-### 1. Confirmacao antes de excluir (Clientes e OPs)
-- **Situacao atual:** Ao clicar em excluir, o item e removido imediatamente sem confirmacao
-- **Melhoria:** Adicionar modal de confirmacao "Tem certeza?" (como ja existe em Pecas)
-- **Impacto:** Evita exclusoes acidentais
+O ponto mais forte do sistema hoje e que as duas pontas existem — falta costurar.
 
-### 2. Paginacao nas listagens
-- **Situacao atual:** Todas as listagens carregam todos os registros de uma vez (`limit=100`)
-- **Melhoria:** Implementar paginacao real com controles (anterior/proximo) e indicador de pagina
-- **Impacto:** Performance e usabilidade com muitos registros
+### 1.1. Gerar conta a receber automaticamente ao concluir OP
+- Ao mudar OP para "Concluida", abrir modal pre-preenchido para emitir conta a receber para o cliente da OP (valor, vencimento, parcelamento).
+- Vincular a conta a receber a OP de origem (coluna `ordem_producao_id` em `contas_receber`).
+- **Beneficio:** zero retrabalho de digitacao, rastreabilidade completa.
 
-### 3. Dominio e HTTPS
-- **Situacao atual:** Acesso apenas por IP (http://165.22.190.242)
-- **Melhoria:** Configurar dominio proprio com certificado SSL (Caddy ja esta preparado)
-- **Impacto:** Profissionalismo, seguranca, SEO
+### 1.2. Custo real da OP
+- Campo de custo de materia-prima + apontamento de horas trabalhadas por peca.
+- Dashboard mostra margem real (preco cobrado - custo) por OP.
+- **Beneficio:** precificacao baseada em dado, nao em achismo.
 
-### 4. Niveis de permissao (Roles)
-- **Situacao atual:** Todos os usuarios tem acesso total ao sistema
-- **Melhoria:** Criar roles (admin, operador, visualizador) com permissoes diferentes
-- **Impacto:** Seguranca e controle de acesso
-
-### 5. Gestao de usuarios no frontend
-- **Situacao atual:** Usuarios so podem ser criados via API/script. Nao tem tela de gestao
-- **Melhoria:** Tela para listar, criar, editar, desativar e alterar senha de usuarios
-- **Impacto:** Autonomia do administrador
+### 1.3. Orcamento -> Aprovacao -> OP
+- Fluxo novo: cadastrar orcamento, gerar PDF, enviar ao cliente, aprovar e converter em OP com um clique.
+- Status: rascunho, enviado, aprovado, rejeitado, convertido.
+- **Beneficio:** formaliza a venda antes de virar producao.
 
 ---
 
-## Prioridade MEDIA (Melhoram significativamente a experiencia)
+## 2. Modulo Financeiro — Evolucoes (ALTA/MEDIA)
 
-### 6. Dashboard com graficos
-- **Situacao atual:** Dashboard mostra apenas numeros e listas
-- **Melhoria:** Adicionar graficos (pecas por status, producao por mes, OPs por cliente)
-- **Tecnologia sugerida:** Recharts ou Chart.js
+### 2.1. Fluxo de caixa projetado (ALTA)
+- Grafico de saldo projetado para os proximos 30/60/90 dias, somando contas a pagar e a receber em aberto.
+- Alerta quando saldo projetado ficar negativo.
 
-### 7. Historico/log de alteracoes
-- **Situacao atual:** Nao existe registro de quem fez o que
-- **Melhoria:** Tabela de auditoria com usuario, acao, data e detalhes da alteracao
-- **Impacto:** Rastreabilidade
+### 2.2. Despesas recorrentes (ALTA)
+- Cadastrar despesas fixas (aluguel, energia, internet) e gerar automaticamente a conta a pagar todo mes.
 
-### 8. Busca global
-- **Situacao atual:** Busca funciona apenas dentro de cada pagina
-- **Melhoria:** Barra de busca global no header que pesquisa em clientes, OPs e pecas simultaneamente
-- **Impacto:** Agilidade na navegacao
+### 2.3. Anexar comprovante/NF em lancamento (MEDIA)
+- Upload de PDF ou imagem vinculado a cada lancamento/conta.
+- **Beneficio:** auditoria e organizacao contabil.
 
-### 9. Notificacoes de prazo
-- **Situacao atual:** Nao existe alerta de prazo de entrega proximo ou vencido
-- **Melhoria:** Indicadores visuais (vermelho para atrasadas, amarelo para proximas do prazo) + notificacoes no dashboard
-- **Impacto:** Prevencao de atrasos
+### 2.4. Conciliacao bancaria (MEDIA)
+- Importar extrato OFX/CSV e casar automaticamente com lancamentos.
 
-### 10. Exportar para Excel/PDF
-- **Situacao atual:** Dados so podem ser visualizados no sistema
-- **Melhoria:** Botao de exportar listas para Excel (.xlsx) e relatorios em PDF
-- **Impacto:** Compartilhamento de dados, relatorios para clientes
+### 2.5. DRE mensal simplificado (MEDIA)
+- Relatorio de receitas x despesas x resultado por mes, com comparativo entre meses.
 
-### 11. Alterar status da OP automaticamente
-- **Situacao atual:** Status da OP precisa ser alterado manualmente
-- **Melhoria:** Quando todas as pecas de uma OP forem concluidas, alterar automaticamente para "Concluida". Quando a primeira peca iniciar, alterar para "Em Andamento"
-- **Impacto:** Menos trabalho manual, dados mais precisos
-
-### 12. Filtro por data de entrega
-- **Situacao atual:** Nao e possivel filtrar pecas por data de entrega
-- **Melhoria:** Filtro por periodo (esta semana, proximo mes, atrasadas)
-- **Impacto:** Planejamento de producao
-
-### 13. Upload de arquivos/desenhos tecnicos
-- **Situacao atual:** Nao existe upload de arquivos
-- **Melhoria:** Permitir anexar PDFs, imagens ou arquivos DWG/DXF nas pecas
-- **Impacto:** Centralizacao de informacoes
+### 2.6. Centro de custos (BAIXA)
+- Classificar lancamentos por projeto/OP/departamento para analise de rentabilidade.
 
 ---
 
-## Prioridade BAIXA (Nice-to-have, podem ser feitas depois)
+## 3. Producao e Chao de Fabrica (ALTA/MEDIA)
 
-### 14. Tema escuro (Dark mode)
-- **Situacao atual:** Apenas tema claro
-- **Melhoria:** Opcao de alternar entre tema claro e escuro
-- **Impacto:** Conforto visual
+### 3.1. Apontamento de horas por peca (ALTA)
+- Operador registra inicio e fim de producao de cada peca (ou tempo manual).
+- Base para custeio real e para identificar gargalos.
 
-### 15. App mobile (PWA)
-- **Situacao atual:** Sistema e responsivo mas nao funciona offline
-- **Melhoria:** Transformar em PWA com service worker para acesso offline basico e notificacoes push
-- **Impacto:** Acesso no chao de fabrica
+### 3.2. Controle de estoque de materia-prima (ALTA)
+- Cadastro de materia-prima (chapa, barra, etc) com saldo atual.
+- Baixa automatica ao iniciar peca, alerta de estoque minimo.
 
-### 16. Relatorios e metricas avancadas
-- **Situacao atual:** Dashboard basico
-- **Melhoria:** Pagina dedicada de relatorios: producao por periodo, tempo medio por peca, taxa de cancelamento, ranking de clientes
-- **Impacto:** Tomada de decisao
+### 3.3. Lista tecnica (BOM) por peca (MEDIA)
+- Definir quais materias-primas e quantidades cada peca consome.
 
-### 17. Integracao com WhatsApp
-- **Situacao atual:** Comunicacao com cliente e manual
-- **Melhoria:** Notificacoes automaticas via WhatsApp quando peca/OP mudar de status ou ficar pronta
-- **Tecnologia sugerida:** API do WhatsApp Business ou Evolution API
+### 3.4. Kanban visual de pecas (MEDIA)
+- Colunas: Em Fila -> Em Andamento -> Concluida, com drag-and-drop.
+- Alternativa a tabela atual.
 
-### 18. Kanban visual para pecas
-- **Situacao atual:** Pecas sao exibidas em tabela
-- **Melhoria:** Visao kanban com colunas (Em Fila > Em Andamento > Concluida) e drag-and-drop
-- **Impacto:** Visao mais intuitiva do fluxo
+### 3.5. Etiquetas com QR code para pecas (MEDIA)
+- Imprimir etiqueta por peca; operador escaneia para mudar status/apontar hora.
 
-### 19. Ordem de prioridade nas pecas
-- **Situacao atual:** Pecas nao tem campo de prioridade
-- **Melhoria:** Campo de prioridade (baixa, media, alta, urgente) com ordenacao e indicador visual
-- **Impacto:** Gestao de prioridades
-
-### 20. Multi-empresa (SaaS)
-- **Situacao atual:** Sistema single-tenant (uma empresa)
-- **Melhoria:** Suporte multi-tenant para atender varias empresas com dados isolados
-- **Impacto:** Modelo de negocio escalavel
-
-### 21. Backup automatico do banco para nuvem
-- **Situacao atual:** Backup do Droplet (imagem completa)
-- **Melhoria:** Backup automatico diario do PostgreSQL para S3/Spaces com retencao configuravel
-- **Impacto:** Seguranca dos dados
-
-### 22. Monitoramento e alertas
-- **Situacao atual:** Sem monitoramento
-- **Melhoria:** Configurar UptimeRobot ou similar para monitorar se o site esta no ar, alertas por email/Telegram
-- **Impacto:** Disponibilidade
-
-### 23. Testes automatizados
-- **Situacao atual:** Nenhum teste automatizado
-- **Melhoria:** Testes unitarios no backend (pytest) e testes e2e no frontend (Playwright ou Cypress)
-- **Impacto:** Qualidade e confianca no codigo
-
-### 24. CI/CD (Deploy automatico)
-- **Situacao atual:** Deploy manual via SSH + docker compose
-- **Melhoria:** Pipeline GitHub Actions que faz build, testa e deploy automaticamente ao fazer push na branch main
-- **Impacto:** Agilidade no deploy
-
-### 25. Impressao de etiquetas
-- **Situacao atual:** Nao existe
-- **Melhoria:** Gerar etiquetas com QR code para pecas, permitindo leitura no chao de fabrica
-- **Impacto:** Rastreabilidade fisica
+### 3.6. Prioridade e urgencia na peca (BAIXA)
+- Campo de prioridade (baixa/media/alta/urgente) com destaque visual.
 
 ---
 
-## Resumo por Area
+## 4. Gestao Comercial e Clientes (MEDIA)
 
-| Area | Melhorias | IDs |
-|------|-----------|-----|
-| **Frontend/UX** | 8 | 1, 2, 6, 8, 14, 15, 18, 25 |
-| **Backend/Logica** | 6 | 4, 7, 11, 19, 20, 23 |
-| **Integracao** | 3 | 10, 13, 17 |
-| **Infraestrutura** | 4 | 3, 21, 22, 24 |
-| **Relatorios** | 2 | 12, 16 |
-| **Gestao** | 2 | 5, 9 |
+### 4.1. Ficha do cliente com historico completo
+- Pagina do cliente mostrando: OPs ja feitas, faturamento total, ticket medio, inadimplencia.
+
+### 4.2. Tabela de preco por cliente
+- Precos diferenciados por cliente ou grupo de clientes.
+
+### 4.3. Follow-up de orcamentos
+- Lista de orcamentos enviados mas nao aprovados, com data do ultimo contato.
 
 ---
 
-## Sugestao de Roadmap
+## 5. Relatorios e BI (MEDIA)
 
-**Fase 1 — Essencial (1-2 semanas)**
-- [ ] #1 Confirmacao antes de excluir
-- [ ] #2 Paginacao
-- [ ] #5 Tela de gestao de usuarios
-- [ ] #11 Status automatico da OP
+### 5.1. Relatorio de lucratividade por OP
+- Quanto custou x quanto foi cobrado x margem.
 
-**Fase 2 — Profissionalizacao (2-4 semanas)**
-- [ ] #3 Dominio + HTTPS
-- [ ] #4 Niveis de permissao
-- [ ] #6 Dashboard com graficos
-- [ ] #9 Notificacoes de prazo
-- [ ] #10 Exportar Excel/PDF
+### 5.2. Tempo medio de entrega
+- Prazo prometido x prazo real, por cliente e por tipo de peca.
 
-**Fase 3 — Diferencial (1-2 meses)**
-- [ ] #7 Historico de alteracoes
-- [ ] #8 Busca global
-- [ ] #12 Filtro por data
-- [ ] #13 Upload de arquivos
-- [ ] #22 Monitoramento
+### 5.3. Ranking de clientes e pecas
+- Top 10 clientes por faturamento, top 10 pecas mais produzidas.
 
-**Fase 4 — Escala (2-3 meses)**
-- [ ] #16 Relatorios avancados
-- [ ] #17 Integracao WhatsApp
-- [ ] #18 Kanban visual
-- [ ] #23 Testes automatizados
-- [ ] #24 CI/CD
+### 5.4. Exportar qualquer listagem em Excel e PDF
+- Botao de exportar em todas as telas de lista.
+
+---
+
+## 6. UX e Produtividade (MEDIA/BAIXA)
+
+### 6.1. Busca global (Ctrl+K)
+- Barra de busca unica que pesquisa em clientes, OPs, pecas, fornecedores, lancamentos.
+
+### 6.2. Notificacoes no header
+- Sino com alertas: contas vencendo, OPs atrasadas, pecas paradas.
+
+### 6.3. Paginacao real
+- Substituir o `limit=100` atual por paginacao com controle de pagina e tamanho.
+
+### 6.4. Filtros avancados e salvos
+- Filtro por periodo, status, cliente, etc; opcao de salvar filtro usado com frequencia.
+
+### 6.5. Dark mode (BAIXA)
+
+### 6.6. Atalhos de teclado (BAIXA)
+- Novo registro, salvar, buscar, navegar entre abas.
+
+---
+
+## 7. Integracoes (MEDIA)
+
+### 7.1. Emissao de NFe/NFSe
+- Via integracao (Tecnospeed, eNotas, Focus NFe).
+- **Beneficio:** eliminar digitacao paralela no sistema da prefeitura/SEFAZ.
+
+### 7.2. WhatsApp automatico
+- Avisar cliente quando OP mudar de status (em producao, concluida, nota emitida).
+- Enviar boleto/cobranca via WhatsApp.
+
+### 7.3. E-mail automatico
+- Envio de orcamento em PDF, cobranca, confirmacao de recebimento.
+
+### 7.4. Importacao de pedido via planilha
+- Upload de Excel para cadastrar varias pecas de uma OP de uma vez.
+
+---
+
+## 8. Governanca e Seguranca (ALTA/MEDIA)
+
+### 8.1. Log de auditoria (ALTA)
+- Tabela registrando quem fez o que, quando, com diff antes/depois.
+- Visivel na ficha de cada registro.
+
+### 8.2. Tela de gestao de usuarios no frontend (ALTA)
+- Listar, criar, editar, desativar, trocar senha, mudar role.
+- Hoje isso so existe via script no servidor.
+
+### 8.3. Permissoes por role no frontend (ALTA)
+- Operador nao ve modulo financeiro, visualizador nao edita, etc.
+
+### 8.4. Backup automatico do Postgres para nuvem (ALTA)
+- Cron diario gerando dump e enviando para Spaces/S3 com retencao.
+
+### 8.5. Monitoramento e alertas (MEDIA)
+- UptimeRobot para uptime + Sentry (ou similar) para erros em producao.
+
+### 8.6. 2FA para admin (BAIXA)
+
+---
+
+## 9. Infra e DevOps (MEDIA/BAIXA)
+
+### 9.1. CI/CD via GitHub Actions
+- Push em main -> build -> deploy automatico no droplet.
+
+### 9.2. Ambiente de staging
+- Segundo droplet ou compose alternativo para testar antes de producao.
+
+### 9.3. Testes automatizados
+- Pytest no backend (services criticos e fluxos financeiros), Playwright para fluxos principais no frontend.
+
+### 9.4. Logs centralizados
+- Stack simples (Loki/Grafana ou apenas persistencia dos logs do compose).
+
+---
+
+## 10. Mobile e PWA (BAIXA)
+
+### 10.1. PWA instalavel
+- Acesso offline basico de consultas, notificacoes push.
+
+### 10.2. App dedicado para chao de fabrica
+- Tela kiosk simplificada com QR scanner para apontamento rapido.
+
+---
+
+## 11. Escala Futura (BAIXA)
+
+### 11.1. Multi-tenant (SaaS)
+- Preparar o sistema para atender varias empresas em uma unica instancia.
+
+### 11.2. Multi-filial
+- Uma empresa com mais de uma unidade produtiva.
+
+---
+
+## Sugestao de Roadmap por Trimestre
+
+**Q2/2026 — Amarrar producao e financeiro**
+- 1.1 Conta a receber automatica da OP
+- 2.1 Fluxo de caixa projetado
+- 2.2 Despesas recorrentes
+- 8.1 Log de auditoria
+- 8.2 Gestao de usuarios no frontend
+- 8.4 Backup automatico
+
+**Q3/2026 — Custo real e chao de fabrica**
+- 1.2 Custo real da OP
+- 3.1 Apontamento de horas
+- 3.2 Estoque de materia-prima
+- 5.1 Relatorio de lucratividade
+- 5.4 Exportacao Excel/PDF
+
+**Q4/2026 — Comercial e integracoes**
+- 1.3 Orcamento -> OP
+- 7.1 Emissao de NFe/NFSe
+- 7.2 WhatsApp
+- 4.1 Ficha completa do cliente
+
+**2027 — Maturidade**
+- 3.4 Kanban
+- 9.1 CI/CD + 9.3 Testes
+- 10.1 PWA
+- Decisao sobre 11.x (SaaS / multi-filial) conforme demanda comercial
