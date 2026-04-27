@@ -3,14 +3,14 @@ import { X } from 'lucide-react';
 import { useToast } from '../ui/Toast';
 import { nfeService } from '../../services/nfe';
 import {
-  ImportNFePayload,
+  ImportNFeReceberPayload,
   NFeApiError,
-  PreviewNFeResponse,
+  PreviewNFeReceberResponse,
 } from '../../types/nfe';
 
 type Stage = 'idle' | 'uploading' | 'reviewing' | 'saving' | 'error';
 
-interface ImportarNFEModalProps {
+interface ImportarNFEReceberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImported: () => void;
@@ -22,24 +22,18 @@ interface ParcelaForm {
   valor: string;
 }
 
-const categorias = [
-  'material', 'servicos', 'fixas', 'impostos', 'carro', 'gasolina',
-  'salario', 'aluguel', 'patrimonio', 'outros',
-];
-
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
-export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEModalProps) {
+export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: ImportarNFEReceberModalProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>('idle');
-  const [preview, setPreview] = useState<PreviewNFeResponse | null>(null);
+  const [preview, setPreview] = useState<PreviewNFeReceberResponse | null>(null);
   const [errorInfo, setErrorInfo] = useState<NFeApiError | null>(null);
 
   const [descricao, setDescricao] = useState('');
-  const [categoria, setCategoria] = useState('material');
   const [observacoes, setObservacoes] = useState('');
   const [dataEmissao, setDataEmissao] = useState('');
   const [parcelas, setParcelas] = useState<ParcelaForm[]>([]);
@@ -49,7 +43,6 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
     setPreview(null);
     setErrorInfo(null);
     setDescricao('');
-    setCategoria('material');
     setObservacoes('');
     setDataEmissao('');
     setParcelas([]);
@@ -65,10 +58,9 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
     setStage('uploading');
     setErrorInfo(null);
     try {
-      const data = await nfeService.preview(file);
+      const data = await nfeService.previewReceber(file);
       setPreview(data);
       setDescricao(data.sugestoes.descricao);
-      setCategoria(data.sugestoes.categoria);
       setObservacoes(data.sugestoes.observacoes);
       setDataEmissao(data.parsed.data_emissao);
       const parcs = data.parsed.parcelas.length > 0
@@ -104,23 +96,23 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
     if (!preview || stage === 'saving') return;
     setStage('saving');
     try {
-      const payload: ImportNFePayload = {
+      const dest_cnpj_cpf = preview.parsed.dest_cnpj_cpf || '';
+      const payload: ImportNFeReceberPayload = {
         chave_acesso: preview.parsed.chave_acesso,
-        fornecedor: preview.fornecedor
+        cliente: preview.cliente
           ? {
-              id: preview.fornecedor.id,
-              nome: preview.fornecedor.nome,
-              cnpj: preview.parsed.emitente_cnpj,
-              email: preview.parsed.emitente_email,
+              id: preview.cliente.id,
+              nome: preview.cliente.nome,
+              cnpj_cpf: dest_cnpj_cpf,
+              email: preview.parsed.dest_email,
             }
           : {
               id: null,
-              nome: preview.parsed.emitente_fantasia || preview.parsed.emitente_nome,
-              cnpj: preview.parsed.emitente_cnpj,
-              email: preview.parsed.emitente_email,
+              nome: preview.parsed.dest_nome || 'Cliente',
+              cnpj_cpf: dest_cnpj_cpf,
+              email: preview.parsed.dest_email,
             },
         descricao,
-        categoria,
         observacoes,
         data_emissao: dataEmissao,
         parcelas: parcelas.map((p) => ({
@@ -128,7 +120,7 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
           valor: p.valor,
         })),
       };
-      await nfeService.import(payload);
+      await nfeService.importReceber(payload);
       toast('success', `${parcelas.length} ${parcelas.length === 1 ? 'conta criada' : 'contas criadas'}!`);
       reset();
       onImported();
@@ -160,7 +152,7 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
           {stage === 'idle' && (
             <div className="p-5 space-y-3">
               <p className="text-[14px] text-gray-600">
-                Selecione o XML da NF-e recebida do fornecedor.
+                Selecione o XML da NF-e emitida pela sua empresa.
               </p>
               <input
                 ref={fileInputRef}
@@ -191,8 +183,8 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
                     Esta NF-e foi importada em {errorInfo.importada_em
                       ? new Date(errorInfo.importada_em + 'T00:00:00').toLocaleDateString('pt-BR')
                       : '—'}.
-                    {errorInfo.contas_pagar_ids && errorInfo.contas_pagar_ids.length > 0 && (
-                      <> Já existem {errorInfo.contas_pagar_ids.length} conta(s) a pagar vinculada(s).</>
+                    {errorInfo.contas_receber_ids && errorInfo.contas_receber_ids.length > 0 && (
+                      <> Já existem {errorInfo.contas_receber_ids.length} conta(s) a receber vinculada(s).</>
                     )}
                   </p>
                 </div>
@@ -215,10 +207,10 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
 
           {(stage === 'reviewing' || stage === 'saving') && preview && (
             <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
-              {!preview.fornecedor && (
+              {!preview.cliente && (
                 <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
                   <p className="text-[13px] text-blue-700 font-medium">
-                    Novo fornecedor será cadastrado: {preview.parsed.emitente_fantasia || preview.parsed.emitente_nome} (CNPJ {preview.parsed.emitente_cnpj})
+                    Novo cliente será cadastrado: {preview.parsed.dest_nome} (CNPJ/CPF {preview.parsed.dest_cnpj_cpf})
                   </p>
                 </div>
               )}
@@ -232,22 +224,13 @@ export function ImportarNFEModal({ isOpen, onClose, onImported }: ImportarNFEMod
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Categoria <span className="text-red-400">*</span></label>
-                  <select value={categoria} onChange={(e) => setCategoria(e.target.value)}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300">
-                    {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[14px] font-medium text-gray-500 mb-1">Data emissão</label>
-                  <input
-                    type="date" value={dataEmissao}
-                    onChange={(e) => setDataEmissao(e.target.value)}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300"
-                  />
-                </div>
+              <div>
+                <label className="block text-[14px] font-medium text-gray-500 mb-1">Data emissão</label>
+                <input
+                  type="date" value={dataEmissao}
+                  onChange={(e) => setDataEmissao(e.target.value)}
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-[15px] text-gray-700 focus:outline-none focus:border-gray-300"
+                />
               </div>
 
               <div className="bg-gray-50 border border-gray-200 rounded-md p-3">

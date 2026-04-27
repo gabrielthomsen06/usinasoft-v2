@@ -21,6 +21,9 @@ export interface NFeParsedData {
   emitente_nome: string;
   emitente_fantasia?: string | null;
   emitente_email?: string | null;
+  dest_cnpj_cpf?: string | null;
+  dest_nome?: string | null;
+  dest_email?: string | null;
   parcelas: NFeParcelaParsed[];
   itens: NFeItemParsed[];
 }
@@ -75,5 +78,49 @@ export interface NFeApiError {
   message?: string;
   chave_acesso?: string;
   importada_em?: string;
+  direcao?: string;
   contas_pagar_ids?: string[];
+  contas_receber_ids?: string[];
+  emitente_cnpj?: string;
+  dest_cnpj_cpf?: string;
+}
+
+// ============= Receber =============
+
+export interface ClienteVinculado {
+  id: string;
+  nome: string;
+}
+
+export interface PreviewSugestoesReceber {
+  descricao: string;
+  observacoes: string;
+}
+
+export interface PreviewNFeReceberResponse {
+  parsed: NFeParsedData;
+  cliente: ClienteVinculado | null;
+  sugestoes: PreviewSugestoesReceber;
+}
+
+export interface ImportNFeCliente {
+  id?: string | null;
+  nome: string;
+  cnpj_cpf: string;
+  email?: string | null;
+}
+
+export interface ImportNFeReceberPayload {
+  chave_acesso: string;
+  cliente: ImportNFeCliente;
+  descricao: string;
+  observacoes?: string | null;
+  data_emissao: string;
+  parcelas: ImportNFeParcela[];
+}
+
+export interface ImportNFeReceberResponse {
+  contas_receber_ids: string[];
+  cliente_id: string;
+  nota_fiscal_id: string;
 }
