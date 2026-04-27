@@ -36,21 +36,23 @@ class NFeParsedData(BaseModel):
     itens: List[NFeItemParsed] = Field(default_factory=list)
 
 
+# ============= Pagar =============
+
 class FornecedorVinculado(BaseModel):
     id: uuid.UUID
     nome: str
 
 
-class PreviewSugestoes(BaseModel):
+class PreviewSugestoesPagar(BaseModel):
     descricao: str
     categoria: str
     observacoes: str
 
 
-class PreviewNFeResponse(BaseModel):
+class PreviewNFePagarResponse(BaseModel):
     parsed: NFeParsedData
     fornecedor: Optional[FornecedorVinculado] = None
-    sugestoes: PreviewSugestoes
+    sugestoes: PreviewSugestoesPagar
 
 
 class FornecedorImportInput(BaseModel):
@@ -65,7 +67,7 @@ class ParcelaImportInput(BaseModel):
     valor: Decimal
 
 
-class ImportNFeRequest(BaseModel):
+class ImportNFePagarRequest(BaseModel):
     chave_acesso: str
     fornecedor: FornecedorImportInput
     descricao: str
@@ -75,7 +77,50 @@ class ImportNFeRequest(BaseModel):
     parcelas: List[ParcelaImportInput]
 
 
-class ImportNFeResponse(BaseModel):
+class ImportNFePagarResponse(BaseModel):
     contas_pagar_ids: List[uuid.UUID]
     fornecedor_id: uuid.UUID
     nota_fiscal_id: uuid.UUID
+
+
+# ============= Receber =============
+
+class PreviewSugestoesReceber(BaseModel):
+    descricao: str
+    observacoes: str
+
+
+class PreviewNFeReceberResponse(BaseModel):
+    parsed: NFeParsedData
+    cliente: Optional[FornecedorVinculado] = None
+    sugestoes: PreviewSugestoesReceber
+
+
+class ClienteImportInput(BaseModel):
+    id: Optional[uuid.UUID] = None
+    nome: str
+    cnpj_cpf: str
+    email: Optional[str] = None
+
+
+class ImportNFeReceberRequest(BaseModel):
+    chave_acesso: str
+    cliente: ClienteImportInput
+    descricao: str
+    observacoes: Optional[str] = None
+    data_emissao: date
+    parcelas: List[ParcelaImportInput]
+
+
+class ImportNFeReceberResponse(BaseModel):
+    contas_receber_ids: List[uuid.UUID]
+    cliente_id: uuid.UUID
+    nota_fiscal_id: uuid.UUID
+
+
+# ============= Aliases backward-compat (frontend Pagar atual) =============
+# O modal Pagar do frontend ainda usa nomes antigos. Mantendo aliases:
+ImportNFeRequest = ImportNFePagarRequest
+ImportNFeResponse = ImportNFePagarResponse
+PreviewNFeResponse = PreviewNFePagarResponse
+PreviewSugestoes = PreviewSugestoesPagar

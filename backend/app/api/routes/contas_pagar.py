@@ -9,9 +9,9 @@ from app.api.deps import get_db, get_current_admin_user
 from app.models.usuario import Usuario
 from app.schemas.conta_pagar import ContaPagarCreate, ContaPagarResponse, ContaPagarUpdate
 from app.schemas.nfe import (
-    ImportNFeRequest,
-    ImportNFeResponse,
-    PreviewNFeResponse,
+    ImportNFePagarRequest,
+    ImportNFePagarResponse,
+    PreviewNFePagarResponse,
 )
 from app.services.conta_pagar_service import (
     list_contas_pagar,
@@ -20,7 +20,7 @@ from app.services.conta_pagar_service import (
     update_conta_pagar,
     delete_conta_pagar,
 )
-from app.services.nota_fiscal_service import import_nfe, preview_nfe
+from app.services.nota_fiscal_service import import_nfe_pagar, preview_nfe_pagar
 
 router = APIRouter(prefix="/contas-pagar", tags=["contas-pagar"])
 
@@ -54,12 +54,12 @@ async def create_conta_pagar_route(
     return await create_conta_pagar(db, data)
 
 
-@router.post("/preview-nfe", response_model=PreviewNFeResponse)
+@router.post("/preview-nfe", response_model=PreviewNFePagarResponse)
 async def preview_nfe_route(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     _: Usuario = Depends(get_current_admin_user),
-) -> PreviewNFeResponse:
+) -> PreviewNFePagarResponse:
     if file.content_type and file.content_type not in (
         "text/xml", "application/xml", "application/octet-stream",
     ):
@@ -75,16 +75,16 @@ async def preview_nfe_route(
             detail={"code": "FILE_TOO_LARGE", "message": "Arquivo maior que 1 MB"},
         )
 
-    return await preview_nfe(db, content)
+    return await preview_nfe_pagar(db, content)
 
 
-@router.post("/import-nfe", response_model=ImportNFeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/import-nfe", response_model=ImportNFePagarResponse, status_code=status.HTTP_201_CREATED)
 async def import_nfe_route(
-    payload: ImportNFeRequest,
+    payload: ImportNFePagarRequest,
     db: AsyncSession = Depends(get_db),
     user: Usuario = Depends(get_current_admin_user),
-) -> ImportNFeResponse:
-    return await import_nfe(db, payload, user)
+) -> ImportNFePagarResponse:
+    return await import_nfe_pagar(db, payload, user)
 
 
 @router.get("/{conta_id}", response_model=ContaPagarResponse)

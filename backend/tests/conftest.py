@@ -13,6 +13,10 @@ from sqlalchemy.pool import StaticPool
 # Necessary because models use postgresql.UUID(as_uuid=True) and tests run on SQLite.
 SQLiteTypeCompiler.visit_UUID = lambda self, type_, **kw: "CHAR(36)"
 
+from app.core.config import settings  # noqa: E402
+# CNPJ da empresa para validação de direção da NF-e (mesmo das fixtures)
+settings.EMPRESA_CNPJ = "53428953000111"
+
 from app.db.database import Base, get_db  # noqa: E402
 from app.api.deps import get_current_admin_user  # noqa: E402
 from app.main import app  # noqa: E402
