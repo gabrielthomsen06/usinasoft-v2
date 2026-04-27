@@ -5,17 +5,22 @@ from typing import AsyncGenerator
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy.dialects.sqlite.base import SQLiteTypeCompiler
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from app.db.database import Base, get_db
-from app.api.deps import get_current_admin_user
-from app.main import app
-from app.models.usuario import Usuario
+# Patch SQLite compiler to handle PostgreSQL UUID type as CHAR(36).
+# Necessary because models use postgresql.UUID(as_uuid=True) and tests run on SQLite.
+SQLiteTypeCompiler.visit_UUID = lambda self, type_, **kw: "CHAR(36)"
+
+from app.db.database import Base, get_db  # noqa: E402
+from app.api.deps import get_current_admin_user  # noqa: E402
+from app.main import app  # noqa: E402
+from app.models.usuario import Usuario  # noqa: E402
 
 
 # Importar todos os models para registrar no metadata
-from app.models import (  # noqa: F401
+from app.models import (  # noqa: F401, E402
     usuario, cliente, peca, ordem_producao, fornecedor,
     conta_receber, conta_pagar, lancamento, nota_fiscal,
 )
