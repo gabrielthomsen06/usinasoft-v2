@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/usinasoft"
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
     DEBUG: bool = False  # seguro por padrão; ative explicitamente em dev
+    EMPRESA_CNPJ: str = ""  # CNPJ da empresa (14 dígitos, sem máscara) — usado pra validar direção da NF-e
 
     @field_validator("SECRET_KEY")
     @classmethod
@@ -26,6 +27,14 @@ class Settings(BaseSettings):
                 "SECRET_KEY deve ser uma string aleatória forte com no mínimo 32 caracteres."
             )
         return v
+
+    @field_validator("EMPRESA_CNPJ")
+    @classmethod
+    def empresa_cnpj_format(cls, v: str) -> str:
+        digits = "".join(c for c in v if c.isdigit())
+        if digits and len(digits) != 14:
+            raise ValueError("EMPRESA_CNPJ deve ter 14 dígitos.")
+        return digits
 
     class Config:
         env_file = str(ENV_FILE)

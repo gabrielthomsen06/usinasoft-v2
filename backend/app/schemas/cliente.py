@@ -9,6 +9,7 @@ class ClienteBase(BaseModel):
     nome: str
     contato: Optional[str] = None
     email: Optional[EmailStr] = None
+    cnpj_cpf: Optional[str] = None
     endereco: Optional[str] = None
 
 
@@ -20,6 +21,7 @@ class ClienteUpdate(BaseModel):
     nome: Optional[str] = None
     contato: Optional[str] = None
     email: Optional[EmailStr] = None
+    cnpj_cpf: Optional[str] = None
     endereco: Optional[str] = None
 
 

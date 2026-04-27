@@ -50,6 +50,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - CORS_ORIGINS=["https://${DOMAIN}","http://${DOMAIN}"]
       - DEBUG=${DEBUG:-false}
+      - EMPRESA_CNPJ=${EMPRESA_CNPJ}
     depends_on:
       db:
         condition: service_healthy

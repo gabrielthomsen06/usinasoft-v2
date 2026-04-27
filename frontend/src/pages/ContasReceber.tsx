@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Search, CheckCircle, RotateCcw } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Search, CheckCircle, RotateCcw, Upload } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { contasReceberService, ContaReceberPayload } from '../services/contasReceber';
 import { clientesService } from '../services/clientes';
 import { ContaReceber, Cliente } from '../types';
 import { MonthNavigator } from '../components/ui/MonthNavigator';
 import { getCurrentMonth, getMonthRange } from '../lib/monthRange';
+import { ImportarNFEReceberModal } from '../components/contas-receber/ImportarNFEReceberModal';
 
 const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
   pendente: { label: 'Pendente', color: 'text-amber-700', bg: 'bg-amber-50' },
@@ -39,6 +40,7 @@ export function ContasReceber() {
   const [vencimentoEditadoManual, setVencimentoEditadoManual] = useState(false);
   const [recalcularFuturas, setRecalcularFuturas] = useState(true);
   const [editingItem, setEditingItem] = useState<ContaReceber | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const load = async () => {
     try {
@@ -173,9 +175,14 @@ export function ContasReceber() {
           <h1 className="text-lg font-semibold text-gray-900">Contas a Receber</h1>
           <p className="text-[14px] text-gray-400 mt-0.5">{items.length} contas</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors">
-          <Plus size={14} /> Nova Conta
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">
+            <Upload size={14} /> Importar XML
+          </button>
+          <button onClick={openCreate} className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors">
+            <Plus size={14} /> Nova Conta
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
@@ -412,6 +419,12 @@ export function ContasReceber() {
           </div>
         </div>
       )}
+
+      <ImportarNFEReceberModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => { setIsLoading(true); load(); }}
+      />
     </div>
   );
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe33333333333333333333333333333333333333333333" versao="4.00">
+      <ide><mod>55</mod><serie>1</serie><nNF>1001</nNF><dhEmi>2026-04-15T10:00:00-03:00</dhEmi></ide>
+      <emit><CNPJ>11222333000144</CNPJ><xNome>FORN CANCELADA</xNome></emit>
+      <dest><CNPJ>53428953000111</CNPJ><xNome>LSC USINAGEM LTDA</xNome></dest>
+      <total><ICMSTot><vNF>10.00</vNF></ICMSTot></total>
+    </infNFe>
+  </NFe>
+  <protNFe versao="4.00">
+    <infProt>
+      <chNFe>33333333333333333333333333333333333333333333</chNFe>
+      <cStat>101</cStat>
+      <xMotivo>Cancelamento de NF-e homologado</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>

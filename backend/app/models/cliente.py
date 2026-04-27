@@ -22,6 +22,7 @@ class Cliente(Base):
     nome: Mapped[str] = mapped_column(String(255), nullable=False)
     contato: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    cnpj_cpf: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, unique=True)
     endereco: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
