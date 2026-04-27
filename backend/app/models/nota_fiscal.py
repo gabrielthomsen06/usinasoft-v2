@@ -25,6 +25,9 @@ class NotaFiscal(Base):
     nome_emitente: Mapped[str] = mapped_column(String(255), nullable=False)
     valor_total: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     data_emissao: Mapped[date] = mapped_column(Date, nullable=False)
+    direcao: Mapped[str] = mapped_column(
+        String(10), nullable=False, default="pagar", server_default="pagar"
+    )
     grupo_parcelas_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )

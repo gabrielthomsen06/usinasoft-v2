@@ -12,6 +12,7 @@ export interface Cliente {
   nome: string;
   contato?: string;
   email?: string;
+  cnpj_cpf?: string;
   endereco?: string;
   created_at: string;
   updated_at: string;
