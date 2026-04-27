@@ -4,6 +4,7 @@
     <infNFe Id="NFe44444444444444444444444444444444444444444444" versao="4.00">
       <ide><mod>65</mod><serie>1</serie><nNF>500</nNF><dhEmi>2026-04-15T10:00:00-03:00</dhEmi></ide>
       <emit><CNPJ>11222333000144</CNPJ><xNome>VAREJO TESTE</xNome></emit>
+      <dest><CNPJ>53428953000111</CNPJ><xNome>LSC USINAGEM LTDA</xNome></dest>
       <total><ICMSTot><vNF>15.00</vNF></ICMSTot></total>
     </infNFe>
   </NFe>

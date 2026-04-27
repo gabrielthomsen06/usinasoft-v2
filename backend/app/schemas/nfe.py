@@ -29,6 +29,9 @@ class NFeParsedData(BaseModel):
     emitente_nome: str
     emitente_fantasia: Optional[str] = None
     emitente_email: Optional[str] = None
+    dest_cnpj_cpf: Optional[str] = None
+    dest_nome: Optional[str] = None
+    dest_email: Optional[str] = None
     parcelas: List[NFeParcelaParsed] = Field(default_factory=list)
     itens: List[NFeItemParsed] = Field(default_factory=list)
 

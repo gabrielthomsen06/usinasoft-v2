@@ -105,6 +105,10 @@ def parse_nfe_xml(xml_bytes: bytes) -> NFeParsedData:
     fantasia = _text(_find(inf_nfe, "emit/xFant"))
     email = _text(_find(inf_nfe, "emit/email"))
 
+    dest_cnpj_cpf = _text(_find(inf_nfe, "dest/CNPJ")) or _text(_find(inf_nfe, "dest/CPF"))
+    dest_nome = _text(_find(inf_nfe, "dest/xNome"))
+    dest_email = _text(_find(inf_nfe, "dest/email"))
+
     parcelas: list[NFeParcelaParsed] = []
     for dup in _findall(inf_nfe, "cobr/dup"):
         n = _text(_find(dup, "nDup")) or ""
@@ -146,6 +150,9 @@ def parse_nfe_xml(xml_bytes: bytes) -> NFeParsedData:
         emitente_nome=nome,
         emitente_fantasia=fantasia,
         emitente_email=email,
+        dest_cnpj_cpf=dest_cnpj_cpf,
+        dest_nome=dest_nome,
+        dest_email=dest_email,
         parcelas=parcelas,
         itens=itens,
     )

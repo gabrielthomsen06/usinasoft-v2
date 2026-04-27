@@ -35,6 +35,24 @@ def test_parse_real_nfe_pwm_1_parcela():
     assert len(result.itens) == 1
     assert "MOLA DE RETORNO" in result.itens[0].descricao
     assert result.itens[0].valor_total == Decimal("150.00")
+    # Destinatário (a empresa neste XML)
+    assert result.dest_cnpj_cpf == "53428953000111"
+    assert result.dest_nome == "LSC USINAGEM LTDA"
+
+
+def test_parse_nfe_emitida_pela_empresa_para_cliente():
+    """NF onde a empresa (LSC) é emitente e há um cliente como destinatário."""
+    xml = load_fixture("nfe_55_receber_3_parcelas.xml")
+
+    result = parse_nfe_xml(xml)
+
+    assert result.emitente_cnpj == "53428953000111"
+    assert result.emitente_nome == "LSC USINAGEM LTDA"
+    assert result.dest_cnpj_cpf == "22333444000155"
+    assert result.dest_nome == "CLIENTE INDUSTRIA LTDA"
+    assert result.dest_email == "compras@cliente.com.br"
+    assert len(result.parcelas) == 3
+    assert result.valor_total == Decimal("800.00")
 
 
 def test_parse_3_parcelas():

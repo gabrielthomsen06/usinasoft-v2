@@ -12,6 +12,10 @@
         <CNPJ>11222333000144</CNPJ>
         <xNome>FORNECEDOR A VISTA</xNome>
       </emit>
+      <dest>
+        <CNPJ>53428953000111</CNPJ>
+        <xNome>LSC USINAGEM LTDA</xNome>
+      </dest>
       <det nItem="1">
         <prod>
           <xProd>ITEM A VISTA</xProd>
