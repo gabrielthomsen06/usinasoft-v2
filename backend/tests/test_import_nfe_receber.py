@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 
 import pytest
 from httpx import AsyncClient
@@ -286,16 +287,15 @@ async def test_import_nfse_pdf_cria_conta_receber(
     assert len(body["contas_receber_ids"]) == 1
 
     # 3) Conta a receber persistida
-    import uuid as _uuid
     result = await db_session.execute(
-        select(ContaReceber).where(ContaReceber.id == _uuid.UUID(body["contas_receber_ids"][0]))
+        select(ContaReceber).where(ContaReceber.id == uuid.UUID(body["contas_receber_ids"][0]))
     )
     conta = result.scalar_one()
     assert float(conta.valor) == 10776.00
 
     # 4) NotaFiscal registrada com chave de 50 chars
     result = await db_session.execute(
-        select(NotaFiscal).where(NotaFiscal.id == _uuid.UUID(body["nota_fiscal_id"]))
+        select(NotaFiscal).where(NotaFiscal.id == uuid.UUID(body["nota_fiscal_id"]))
     )
     nota = result.scalar_one()
     assert len(nota.chave_acesso) == 50

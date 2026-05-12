@@ -25,6 +25,10 @@ from app.schemas.nfe import (
     PreviewSugestoesReceber,
 )
 from app.services.nfe_parser import parse_nfe_xml, NFeParserError
+from app.services.nfse_joinville_pdf_parser import (
+    parse_nfse_joinville_pdf,
+    NFeParserError as NfseParserError,
+)
 
 
 # ============= helpers =============
@@ -176,13 +180,9 @@ async def preview_nfe_receber(
     db: AsyncSession, content: bytes, is_pdf: bool = False
 ) -> PreviewNFeReceberResponse:
     if is_pdf:
-        from app.services.nfse_joinville_pdf_parser import (
-            parse_nfse_joinville_pdf,
-            NFeParserError as PdfParserError,
-        )
         try:
             parsed = parse_nfse_joinville_pdf(content)
-        except PdfParserError as e:
+        except NfseParserError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"code": e.code, "message": e.message},
@@ -380,6 +380,7 @@ async def import_nfe_receber(
         db.add(conta)
         contas.append(conta)
 
+    # NFS-e chave nacional = 50 dígitos; NF-e 55/65 chave = 44 dígitos
     modelo_nf = "NFSE" if len(payload.chave_acesso) == 50 else "55"
     nota = NotaFiscal(
         id=uuid.uuid4(),
