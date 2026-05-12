@@ -1,3 +1,10 @@
+"""Parser for Joinville NFS-e PDFs (Prefeitura de Joinville, SC).
+
+Uses PyMuPDF word-bbox extraction to split the page into vertical sections
+anchored by section headers (PRESTADOR → TOMADOR → DISCRIMINAÇÃO → VALOR TOTAL).
+Column splitting was considered but not needed: sections are stacked vertically
+in the real PDF, not side by side.
+"""
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
@@ -193,58 +200,59 @@ def _extract_pdf_sections(pdf_bytes: bytes) -> _PdfSections:
     except Exception as e:
         raise NFeParserError("INVALID_PDF", "Não foi possível ler o PDF") from e
 
-    if not doc.page_count:
-        raise NFeParserError("INVALID_PDF", "PDF sem páginas")
+    with doc:
+        if not doc.page_count:
+            raise NFeParserError("INVALID_PDF", "PDF sem páginas")
 
-    page = doc[0]
-    full_text = page.get_text()
+        page = doc[0]
+        full_text = page.get_text()
 
-    if _JOINVILLE_SIGNATURE not in full_text:
-        raise NFeParserError(
-            "NOT_NFSE_JOINVILLE",
-            "Este PDF não parece ser uma NFS-e da Prefeitura de Joinville",
+        if _JOINVILLE_SIGNATURE not in full_text:
+            raise NFeParserError(
+                "NOT_NFSE_JOINVILLE",
+                "Este PDF não parece ser uma NFS-e da Prefeitura de Joinville",
+            )
+
+        words = page.get_text("words")
+        lines = _words_to_lines(words)
+        sorted_ys = sorted(lines.keys())
+
+        # Find y-anchors for each section header
+        y_prestador: Optional[float] = None
+        y_tomador: Optional[float] = None
+        y_discriminacao: Optional[float] = None
+        y_valor_total: Optional[float] = None
+
+        for y in sorted_ys:
+            line_upper = lines[y].upper()
+            if y_prestador is None and "PRESTADOR" in line_upper and "SERVI" in line_upper:
+                y_prestador = y
+            elif y_tomador is None and "TOMADOR" in line_upper and "SERVI" in line_upper:
+                y_tomador = y
+            elif y_discriminacao is None and "DISCRIMINA" in line_upper:
+                y_discriminacao = y
+            elif y_valor_total is None and "VALOR TOTAL" in line_upper and "SERVI" in line_upper:
+                y_valor_total = y
+
+        def _section_text(y_start: Optional[float], y_end: Optional[float]) -> str:
+            if y_start is None:
+                return ""
+            lines_in_range = [
+                lines[y] for y in sorted_ys
+                if y > y_start and (y_end is None or y < y_end)
+            ]
+            return "\n".join(lines_in_range)
+
+        prestador_text = _section_text(y_prestador, y_tomador)
+        tomador_text = _section_text(y_tomador, y_discriminacao)
+        discriminacao_text = _section_text(y_discriminacao, y_valor_total)
+
+        return _PdfSections(
+            full_text=full_text,
+            prestador_text=prestador_text,
+            tomador_text=tomador_text,
+            discriminacao_text=discriminacao_text,
         )
-
-    words = page.get_text("words")
-    lines = _words_to_lines(words)
-    sorted_ys = sorted(lines.keys())
-
-    # Find y-anchors for each section header
-    y_prestador: Optional[float] = None
-    y_tomador: Optional[float] = None
-    y_discriminacao: Optional[float] = None
-    y_valor_total: Optional[float] = None
-
-    for y in sorted_ys:
-        line_upper = lines[y].upper()
-        if y_prestador is None and "PRESTADOR" in line_upper and "SERVI" in line_upper:
-            y_prestador = y
-        elif y_tomador is None and "TOMADOR" in line_upper and "SERVI" in line_upper:
-            y_tomador = y
-        elif y_discriminacao is None and "DISCRIMINA" in line_upper:
-            y_discriminacao = y
-        elif y_valor_total is None and "VALOR TOTAL" in line_upper and "SERVI" in line_upper:
-            y_valor_total = y
-
-    def _section_text(y_start: Optional[float], y_end: Optional[float]) -> str:
-        if y_start is None:
-            return ""
-        lines_in_range = [
-            lines[y] for y in sorted_ys
-            if y > y_start and (y_end is None or y < y_end)
-        ]
-        return "\n".join(lines_in_range)
-
-    prestador_text = _section_text(y_prestador, y_tomador)
-    tomador_text = _section_text(y_tomador, y_discriminacao)
-    discriminacao_text = _section_text(y_discriminacao, y_valor_total)
-
-    return _PdfSections(
-        full_text=full_text,
-        prestador_text=prestador_text,
-        tomador_text=tomador_text,
-        discriminacao_text=discriminacao_text,
-    )
 
 
 _LABEL_RE_CACHE: dict[str, re.Pattern] = {}

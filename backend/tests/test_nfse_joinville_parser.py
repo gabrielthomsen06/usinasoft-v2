@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -83,6 +84,12 @@ def test_parse_valor_brl_decimal_simples():
     assert _parse_valor_brl(texto) == Decimal("250.50")
 
 
+def test_parse_valor_brl_valor_total_servico():
+    """O parser deve aceitar 'VALOR TOTAL DO SERVIÇO' como fonte primária."""
+    texto = "VALOR TOTAL DO SERVIÇO: R$ 10.776,00"
+    assert _parse_valor_brl(texto) == Decimal("10776.00")
+
+
 def test_parse_valor_brl_nao_encontrado():
     with pytest.raises(NFeParserError) as exc:
         _parse_valor_brl("texto sem valor")
@@ -150,8 +157,6 @@ def test_parse_vencimentos_data_unica_com_dois_pontos():
     assert len(parcelas) == 1
     assert parcelas[0].vencimento == date(2026, 6, 2)
 
-
-from pathlib import Path
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "nfse"
 
