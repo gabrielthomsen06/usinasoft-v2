@@ -201,3 +201,150 @@ async def test_import_nfe_receber_duplicada_retorna_409(
     assert detail["code"] == "DUPLICATE"
     assert detail["direcao"] == "receber"
     assert len(detail["contas_receber_ids"]) == 1
+
+
+# ============= PDF NFS-e Joinville =============
+
+NFSE_FIXTURES_DIR = Path(__file__).parent / "fixtures" / "nfse"
+
+
+def nfse_fixture_path(name: str) -> Path:
+    return NFSE_FIXTURES_DIR / name
+
+
+async def test_preview_nfse_pdf_ok(client: AsyncClient):
+    pdf_bytes = nfse_fixture_path("nfse_joinville_162.pdf").read_bytes()
+
+    response = await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("nota.pdf", pdf_bytes, "application/pdf")},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["parsed"]["modelo"] == "NFSE"
+    assert data["parsed"]["numero_nota"] == "162"
+    assert data["parsed"]["emitente_cnpj"] == "53428953000111"  # LSC USINAGEM
+    assert data["parsed"]["dest_cnpj_cpf"] == "00477761000139"  # Víqua
+    assert len(data["parsed"]["chave_acesso"]) == 50
+    assert data["cliente"] is None
+    assert "162" in data["sugestoes"]["descricao"]
+
+
+async def test_preview_nfse_pdf_vincula_cliente_existente(
+    client: AsyncClient, db_session: AsyncSession
+):
+    cli = Cliente(nome="VÍQUA JÁ CADASTRADA", cnpj_cpf="00477761000139")
+    db_session.add(cli)
+    await db_session.commit()
+
+    pdf_bytes = nfse_fixture_path("nfse_joinville_162.pdf").read_bytes()
+    response = await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("nota.pdf", pdf_bytes, "application/pdf")},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["cliente"] is not None
+    assert data["cliente"]["id"] == str(cli.id)
+
+
+async def test_import_nfse_pdf_cria_conta_receber(
+    client: AsyncClient, db_session: AsyncSession
+):
+    pdf_bytes = nfse_fixture_path("nfse_joinville_162.pdf").read_bytes()
+
+    # 1) Preview
+    preview_resp = await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("nota.pdf", pdf_bytes, "application/pdf")},
+    )
+    assert preview_resp.status_code == 200
+    preview = preview_resp.json()
+
+    # 2) Import
+    payload = {
+        "chave_acesso": preview["parsed"]["chave_acesso"],
+        "cliente": {
+            "id": None,
+            "nome": preview["parsed"]["dest_nome"],
+            "cnpj_cpf": preview["parsed"]["dest_cnpj_cpf"],
+            "email": None,
+        },
+        "descricao": preview["sugestoes"]["descricao"],
+        "observacoes": preview["sugestoes"]["observacoes"],
+        "data_emissao": preview["parsed"]["data_emissao"],
+        "parcelas": [
+            {"vencimento": p["vencimento"], "valor": p["valor"]}
+            for p in preview["parsed"]["parcelas"]
+        ],
+    }
+    import_resp = await client.post("/api/contas-receber/import-nfe", json=payload)
+    assert import_resp.status_code == 201, import_resp.text
+    body = import_resp.json()
+    assert len(body["contas_receber_ids"]) == 1
+
+    # 3) Conta a receber persistida
+    import uuid as _uuid
+    result = await db_session.execute(
+        select(ContaReceber).where(ContaReceber.id == _uuid.UUID(body["contas_receber_ids"][0]))
+    )
+    conta = result.scalar_one()
+    assert float(conta.valor) == 10776.00
+
+    # 4) NotaFiscal registrada com chave de 50 chars
+    result = await db_session.execute(
+        select(NotaFiscal).where(NotaFiscal.id == _uuid.UUID(body["nota_fiscal_id"]))
+    )
+    nota = result.scalar_one()
+    assert len(nota.chave_acesso) == 50
+    assert nota.modelo == "NFSE"
+    assert nota.direcao == "receber"
+
+
+async def test_import_nfse_pdf_duplicate(client: AsyncClient):
+    pdf_bytes = nfse_fixture_path("nfse_joinville_162.pdf").read_bytes()
+
+    # Primeira importação
+    preview = (await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("n.pdf", pdf_bytes, "application/pdf")},
+    )).json()
+    payload = {
+        "chave_acesso": preview["parsed"]["chave_acesso"],
+        "cliente": {
+            "id": None,
+            "nome": preview["parsed"]["dest_nome"],
+            "cnpj_cpf": preview["parsed"]["dest_cnpj_cpf"],
+            "email": None,
+        },
+        "descricao": preview["sugestoes"]["descricao"],
+        "observacoes": "",
+        "data_emissao": preview["parsed"]["data_emissao"],
+        "parcelas": [
+            {"vencimento": p["vencimento"], "valor": p["valor"]}
+            for p in preview["parsed"]["parcelas"]
+        ],
+    }
+    first = await client.post("/api/contas-receber/import-nfe", json=payload)
+    assert first.status_code == 201
+
+    # Segunda tentativa de preview do mesmo PDF
+    dup_resp = await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("n.pdf", pdf_bytes, "application/pdf")},
+    )
+    assert dup_resp.status_code == 409
+    detail = dup_resp.json()["detail"]
+    assert detail["code"] == "DUPLICATE"
+    assert detail["direcao"] == "receber"
+
+
+async def test_preview_pdf_invalido(client: AsyncClient):
+    response = await client.post(
+        "/api/contas-receber/preview-nfe",
+        files={"file": ("nao_e_pdf.pdf", b"not a real pdf", "application/pdf")},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "INVALID_PDF"

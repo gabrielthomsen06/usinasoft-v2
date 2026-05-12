@@ -65,14 +65,16 @@ def _format_chave(chave: str) -> str:
 
 
 def _format_observacoes(parsed: NFeParsedData) -> str:
-    linhas = [f"Chave: {_format_chave(parsed.chave_acesso)}", "Itens:"]
-    for it in parsed.itens:
-        qtd_str = f"{it.quantidade.normalize():f}"
-        if "." in qtd_str:
-            qtd_str = qtd_str.rstrip("0").rstrip(".")
-        linhas.append(
-            f"- {qtd_str}x {it.descricao} (R$ {it.valor_total:.2f})"
-        )
+    linhas = [f"Chave: {_format_chave(parsed.chave_acesso)}"]
+    if parsed.itens:
+        linhas.append("Itens:")
+        for it in parsed.itens:
+            qtd_str = f"{it.quantidade.normalize():f}"
+            if "." in qtd_str:
+                qtd_str = qtd_str.rstrip("0").rstrip(".")
+            linhas.append(
+                f"- {qtd_str}x {it.descricao} (R$ {it.valor_total:.2f})"
+            )
     return "\n".join(linhas)
 
 
@@ -171,9 +173,22 @@ async def preview_nfe_pagar(
 
 
 async def preview_nfe_receber(
-    db: AsyncSession, xml_bytes: bytes
+    db: AsyncSession, content: bytes, is_pdf: bool = False
 ) -> PreviewNFeReceberResponse:
-    parsed = _parse_or_400(xml_bytes)
+    if is_pdf:
+        from app.services.nfse_joinville_pdf_parser import (
+            parse_nfse_joinville_pdf,
+            NFeParserError as PdfParserError,
+        )
+        try:
+            parsed = parse_nfse_joinville_pdf(content)
+        except PdfParserError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": e.code, "message": e.message},
+            )
+    else:
+        parsed = _parse_or_400(content)
 
     empresa = _empresa_cnpj()
     if parsed.emitente_cnpj != empresa:
@@ -184,7 +199,7 @@ async def preview_nfe_receber(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "code": "MISSING_DEST",
-                "message": "Esta NF-e não tem CNPJ/CPF de destinatário.",
+                "message": "Esta nota não tem CNPJ/CPF de destinatário.",
             },
         )
 
@@ -202,8 +217,9 @@ async def preview_nfe_receber(
         cliente_link = FornecedorVinculado(id=cli.id, nome=cli.nome)
 
     nome_dest = parsed.dest_nome or "Cliente"
+    rotulo = "NFS-e" if parsed.modelo == "NFSE" else "NF-e"
     sugestoes = PreviewSugestoesReceber(
-        descricao=f"NF-e nº {parsed.numero_nota} - {nome_dest}",
+        descricao=f"{rotulo} nº {parsed.numero_nota} - {nome_dest}",
         observacoes=_format_observacoes(parsed),
     )
 
@@ -364,12 +380,13 @@ async def import_nfe_receber(
         db.add(conta)
         contas.append(conta)
 
+    modelo_nf = "NFSE" if len(payload.chave_acesso) == 50 else "55"
     nota = NotaFiscal(
         id=uuid.uuid4(),
         chave_acesso=payload.chave_acesso,
         numero_nota="",
         serie=None,
-        modelo="55",
+        modelo=modelo_nf,
         cnpj_emitente=settings.EMPRESA_CNPJ,
         nome_emitente=payload.cliente.nome,
         valor_total=sum(float(p.valor) for p in payload.parcelas),
