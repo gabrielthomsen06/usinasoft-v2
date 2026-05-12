@@ -139,7 +139,7 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
         setErrorInfo(detail);
         setStage('error');
       } else {
-        toast('error', detail?.message || 'Erro ao importar NF-e');
+        toast('error', detail?.message || 'Erro ao importar nota');
         setStage('reviewing');
       }
     }
