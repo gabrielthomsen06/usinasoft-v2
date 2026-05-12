@@ -175,17 +175,12 @@ def test_parse_pdf_real_162():
     assert result.valor_total == Decimal("10776.00")
 
     # Prestador = LSC USINAGEM (empresa)
-    # Note: pdfplumber extracts text concatenated without spaces from this PDF,
-    # so "LSC USINAGEM LTDA" appears as "LSCUSINAGEMLTDA".
     assert result.emitente_cnpj == "53428953000111"
-    assert "LSCUSINAGEM" in result.emitente_nome.upper()
+    assert "LSC USINAGEM" in result.emitente_nome.upper()
 
     # Tomador = VÍQUA (cliente)
-    # Accented chars are garbled by pdfplumber (encoding issue in this PDF).
-    # Strip non-ASCII chars before comparing.
     assert result.dest_cnpj_cpf == "00477761000139"
-    dest_nome_ascii = "".join(c for c in result.dest_nome if ord(c) < 128)
-    assert "VQUA" in dest_nome_ascii.upper() or "VIQUA" in dest_nome_ascii.upper()
+    assert "VÍQUA" in result.dest_nome.upper() or "VIQUA" in result.dest_nome.upper()
 
     # Chave nacional NFS-e tem 50 dígitos
     assert len(result.chave_acesso) == 50
@@ -225,5 +220,5 @@ def test_parse_pdf_nao_e_nfse_joinville():
 
     with pytest.raises(NFeParserError) as exc:
         parse_nfse_joinville_pdf(minimal_pdf)
-    # Pode falhar como INVALID_PDF (se pdfplumber rejeitar) ou NOT_NFSE_JOINVILLE
+    # Pode falhar como INVALID_PDF (se pymupdf rejeitar) ou NOT_NFSE_JOINVILLE
     assert exc.value.code in ("INVALID_PDF", "NOT_NFSE_JOINVILLE")

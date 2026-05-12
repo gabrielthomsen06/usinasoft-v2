@@ -1,11 +1,10 @@
-import io
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 import re
 
-import pdfplumber
+import fitz  # PyMuPDF
 
 from app.schemas.nfe import NFeParcelaParsed, NFeParsedData
 
@@ -60,29 +59,19 @@ def _parse_data_emissao(text: str) -> date:
 
 # ============= _parse_valor_brl =============
 
-# Joinville PDFs concatenate all text without spaces, so both spaced and
-# concatenated variants are needed.
-_VALOR_TOTAL_CONCAT_RE = re.compile(
-    r"VALORTOTALDOSERVI.O:R\$([\d.]+,\d{2})",
-    re.IGNORECASE,
-)
 _VALOR_LIQUIDO_RE = re.compile(
     r"Valor\s+l.quido\s+da\s+NFS-e[^\d]*([\d.]+,\d{2})",
     re.IGNORECASE | re.DOTALL,
 )
-_VALOR_BRL_FALLBACK_RE = re.compile(
+_VALOR_TOTAL_RE = re.compile(
     r"VALOR\s+TOTAL\s+DO\s+SERVI.O[^\d]*R?\$?\s*([\d.]+,\d{2})",
     re.IGNORECASE,
 )
 
 
 def _parse_valor_brl(text: str) -> Decimal:
-    # Try concatenated form first (Joinville PDFs), then spaced variants
-    m = (
-        _VALOR_TOTAL_CONCAT_RE.search(text)
-        or _VALOR_LIQUIDO_RE.search(text)
-        or _VALOR_BRL_FALLBACK_RE.search(text)
-    )
+    # Try "VALOR TOTAL DO SERVIÇO" first (more specific), then "Valor líquido da NFS-e"
+    m = _VALOR_TOTAL_RE.search(text) or _VALOR_LIQUIDO_RE.search(text)
     if not m:
         raise NFeParserError("MISSING_FIELDS", "Valor da nota não encontrado no PDF")
     raw = m.group(1).replace(".", "").replace(",", ".")
@@ -179,73 +168,85 @@ class _PdfSections:
     discriminacao_text: str  # bloco entre DISCRIMINAÇÃO e VALOR TOTAL
 
 
-def _find_label_y(page, label: str) -> Optional[float]:
-    """Retorna a coordenada 'top' da primeira palavra cujo texto contém o label, ou None."""
-    label_lower = label.lower()
-    for w in page.extract_words():
-        if label_lower in w["text"].lower():
-            return w["top"]
-    return None
+def _words_to_lines(words: list) -> dict[float, str]:
+    """Agrupa palavras por linha (y arredondado) e retorna dict y -> texto da linha.
+
+    Usa bucket de 4pt para tolerar pequenas diferenças de baseline entre label e valor
+    na mesma linha visual (common in Joinville NFS-e PDFs).
+    """
+    groups: dict[float, list[tuple[float, str]]] = {}
+    for w in words:
+        x0, y0, x1, y1, text = w[0], w[1], w[2], w[3], w[4]
+        # round y to nearest 4pt bucket to merge same-line words
+        y_key = round(y0 / 4) * 4
+        groups.setdefault(y_key, []).append((x0, text))
+    result = {}
+    for y_key, items in groups.items():
+        items.sort(key=lambda t: t[0])
+        result[y_key] = " ".join(t[1] for t in items)
+    return result
 
 
 def _extract_pdf_sections(pdf_bytes: bytes) -> _PdfSections:
     try:
-        pdf = pdfplumber.open(io.BytesIO(pdf_bytes))
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     except Exception as e:
         raise NFeParserError("INVALID_PDF", "Não foi possível ler o PDF") from e
 
-    try:
-        if not pdf.pages:
-            raise NFeParserError("INVALID_PDF", "PDF sem páginas")
+    if not doc.page_count:
+        raise NFeParserError("INVALID_PDF", "PDF sem páginas")
 
-        page = pdf.pages[0]
-        full_text = page.extract_text() or ""
+    page = doc[0]
+    full_text = page.get_text()
 
-        if _JOINVILLE_SIGNATURE not in full_text:
-            raise NFeParserError(
-                "NOT_NFSE_JOINVILLE",
-                "Este PDF não parece ser uma NFS-e da Prefeitura de Joinville",
-            )
-
-        # Encontra âncoras verticais para separar os blocos PRESTADOR / TOMADOR /
-        # DISCRIMINAÇÃO. Os headers são palavras concatenadas sem espaço.
-        y_prestador = _find_label_y(page, "PRESTADORDESERVI")
-        y_tomador = _find_label_y(page, "TOMADORDESERVI")
-        y_discriminacao = _find_label_y(page, "DISCRIMINA")
-        y_valor_total = _find_label_y(page, "VALORTOTALDOSERVI")
-
-        w = page.width
-
-        def _crop_text(top: float, bottom: float) -> str:
-            if top is None or bottom is None or bottom <= top:
-                return ""
-            crop = page.within_bbox((0, top, w, bottom))
-            return crop.extract_text() or ""
-
-        prestador_text = _crop_text(
-            y_prestador + 5 if y_prestador is not None else 0,
-            y_tomador - 2 if y_tomador is not None else page.height,
-        )
-        tomador_text = _crop_text(
-            y_tomador + 5 if y_tomador is not None else 0,
-            y_discriminacao - 2 if y_discriminacao is not None else page.height,
-        )
-        discriminacao_text = _crop_text(
-            y_discriminacao + 2 if y_discriminacao is not None else 0,
-            y_valor_total + 20 if y_valor_total is not None else page.height,
+    if _JOINVILLE_SIGNATURE not in full_text:
+        raise NFeParserError(
+            "NOT_NFSE_JOINVILLE",
+            "Este PDF não parece ser uma NFS-e da Prefeitura de Joinville",
         )
 
-        return _PdfSections(
-            full_text=full_text,
-            prestador_text=prestador_text,
-            tomador_text=tomador_text,
-            discriminacao_text=discriminacao_text,
-        )
-    finally:
-        pdf.close()
+    words = page.get_text("words")
+    lines = _words_to_lines(words)
+    sorted_ys = sorted(lines.keys())
+
+    # Find y-anchors for each section header
+    y_prestador: Optional[float] = None
+    y_tomador: Optional[float] = None
+    y_discriminacao: Optional[float] = None
+    y_valor_total: Optional[float] = None
+
+    for y in sorted_ys:
+        line_upper = lines[y].upper()
+        if y_prestador is None and "PRESTADOR" in line_upper and "SERVI" in line_upper:
+            y_prestador = y
+        elif y_tomador is None and "TOMADOR" in line_upper and "SERVI" in line_upper:
+            y_tomador = y
+        elif y_discriminacao is None and "DISCRIMINA" in line_upper:
+            y_discriminacao = y
+        elif y_valor_total is None and "VALOR TOTAL" in line_upper and "SERVI" in line_upper:
+            y_valor_total = y
+
+    def _section_text(y_start: Optional[float], y_end: Optional[float]) -> str:
+        if y_start is None:
+            return ""
+        lines_in_range = [
+            lines[y] for y in sorted_ys
+            if y > y_start and (y_end is None or y < y_end)
+        ]
+        return "\n".join(lines_in_range)
+
+    prestador_text = _section_text(y_prestador, y_tomador)
+    tomador_text = _section_text(y_tomador, y_discriminacao)
+    discriminacao_text = _section_text(y_discriminacao, y_valor_total)
+
+    return _PdfSections(
+        full_text=full_text,
+        prestador_text=prestador_text,
+        tomador_text=tomador_text,
+        discriminacao_text=discriminacao_text,
+    )
 
 
-# Labels used in Joinville PDFs are concatenated (no spaces between words)
 _LABEL_RE_CACHE: dict[str, re.Pattern] = {}
 
 
@@ -272,68 +273,43 @@ def _extract_label(text: str, label: str) -> Optional[str]:
     return None
 
 
-def _extract_cnpj_from_block(text: str) -> Optional[str]:
-    """Extrai o CNPJ/CPF do campo CPF/CNPJ: no bloco de texto."""
-    m = re.search(r"CPF/CNPJ:\s*(\S+)", text, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    return None
-
-
-def _extract_nome_from_block(text: str, prefer_empresarial: bool = True) -> Optional[str]:
-    """Extrai o nome empresarial ou fantasia do bloco de texto."""
-    # Labels aparecem na forma concatenada no PDF de Joinville
-    labels = (
-        ["Nomeempresarial", "Nome empresarial", "Nomefantasia", "Nome fantasia", "Nome"]
-        if prefer_empresarial
-        else ["Nome fantasia", "Nomefantasia", "Nomeempresarial", "Nome empresarial", "Nome"]
-    )
-    for label in labels:
-        m = re.search(rf"{re.escape(label)}:\s*(.+)", text, re.IGNORECASE)
-        if m:
-            value = m.group(1).strip()
-            if value:
-                return value
-    return None
-
-
 def parse_nfse_joinville_pdf(pdf_bytes: bytes) -> NFeParsedData:
     sections = _extract_pdf_sections(pdf_bytes)
 
-    # Número/série vem do cabeçalho, ex: "00000000162/A1"
+    # Número/série vem do cabeçalho, ex: "00000000162 / A1"
     numero, serie = _parse_numero_serie(sections.full_text)
 
     # Data de emissão: primeira data dd/mm/yyyy no texto
     data_emissao = _parse_data_emissao(sections.full_text)
 
-    # Valor total: usa o campo "VALORTOTALDOSERVI?O:R$..." do PDF concatenado
+    # Valor total
     valor_total = _parse_valor_brl(sections.full_text)
 
-    # Chave nacional NFS-e (50 dígitos) — sem word boundary pois está em linha contínua
+    # Chave nacional NFS-e (50 dígitos)
     chave_m = re.search(r"(\d{50})", sections.full_text)
     if not chave_m:
         raise NFeParserError("MISSING_FIELDS", "Chave de acesso (50 dígitos) não encontrada no PDF")
     chave = chave_m.group(1)
 
     # PRESTADOR (emitente)
-    emit_cnpj_raw = _extract_cnpj_from_block(sections.prestador_text)
+    emit_cnpj_raw = _extract_label(sections.prestador_text, "CPF/CNPJ")
     if not emit_cnpj_raw:
         raise NFeParserError("MISSING_FIELDS", "CNPJ do prestador não encontrado no PDF")
     emit_cnpj = _normalize_cnpj(emit_cnpj_raw.split()[0])
     if len(emit_cnpj) not in (11, 14):
         raise NFeParserError("MISSING_FIELDS", "CNPJ/CPF do prestador inválido")
 
-    emit_nome = _extract_nome_from_block(sections.prestador_text, prefer_empresarial=True) or ""
-    emit_fantasia = _extract_label(sections.prestador_text, "Nomefantasia") or _extract_label(
-        sections.prestador_text, "Nome fantasia"
-    )
+    emit_nome = _extract_label(sections.prestador_text, "Nome empresarial") or ""
+    emit_fantasia = _extract_label(sections.prestador_text, "Nome fantasia")
 
     # TOMADOR (destinatário)
-    dest_cnpj_raw = _extract_cnpj_from_block(sections.tomador_text)
+    dest_cnpj_raw = _extract_label(sections.tomador_text, "CPF/CNPJ")
     dest_cnpj = _normalize_cnpj(dest_cnpj_raw.split()[0]) if dest_cnpj_raw else None
     if dest_cnpj and len(dest_cnpj) not in (11, 14):
         dest_cnpj = None
-    dest_nome = _extract_nome_from_block(sections.tomador_text, prefer_empresarial=False)
+    dest_nome = _extract_label(sections.tomador_text, "Nome fantasia") or _extract_label(
+        sections.tomador_text, "Nome"
+    )
 
     # Parcelas — texto livre da discriminação
     parcelas = _parse_vencimentos(sections.discriminacao_text, valor_total)
