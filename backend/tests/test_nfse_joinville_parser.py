@@ -149,3 +149,81 @@ def test_parse_vencimentos_data_unica_com_dois_pontos():
     parcelas = _parse_vencimentos(texto, Decimal("500.00"))
     assert len(parcelas) == 1
     assert parcelas[0].vencimento == date(2026, 6, 2)
+
+
+from pathlib import Path
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures" / "nfse"
+
+
+def load_pdf(name: str) -> bytes:
+    return (FIXTURES_DIR / name).read_bytes()
+
+
+# ============= parse_nfse_joinville_pdf — integração =============
+
+def test_parse_pdf_real_162():
+    from app.services.nfse_joinville_pdf_parser import parse_nfse_joinville_pdf
+
+    pdf = load_pdf("nfse_joinville_162.pdf")
+    result = parse_nfse_joinville_pdf(pdf)
+
+    assert result.modelo == "NFSE"
+    assert result.numero_nota == "162"
+    assert result.serie == "A1"
+    assert result.data_emissao == date(2026, 5, 12)
+    assert result.valor_total == Decimal("10776.00")
+
+    # Prestador = LSC USINAGEM (empresa)
+    # Note: pdfplumber extracts text concatenated without spaces from this PDF,
+    # so "LSC USINAGEM LTDA" appears as "LSCUSINAGEMLTDA".
+    assert result.emitente_cnpj == "53428953000111"
+    assert "LSCUSINAGEM" in result.emitente_nome.upper()
+
+    # Tomador = VÍQUA (cliente)
+    # Accented chars are garbled by pdfplumber (encoding issue in this PDF).
+    # Strip non-ASCII chars before comparing.
+    assert result.dest_cnpj_cpf == "00477761000139"
+    dest_nome_ascii = "".join(c for c in result.dest_nome if ord(c) < 128)
+    assert "VQUA" in dest_nome_ascii.upper() or "VIQUA" in dest_nome_ascii.upper()
+
+    # Chave nacional NFS-e tem 50 dígitos
+    assert len(result.chave_acesso) == 50
+    assert result.chave_acesso.isdigit()
+
+    # Vencimento extraído do texto livre "vencimento dia 02/06/26"
+    assert len(result.parcelas) == 1
+    assert result.parcelas[0].vencimento == date(2026, 6, 2)
+    assert result.parcelas[0].valor == Decimal("10776.00")
+
+    # NFS-e Joinville não tem itens estruturados
+    assert result.itens == []
+
+
+def test_parse_pdf_invalido():
+    from app.services.nfse_joinville_pdf_parser import parse_nfse_joinville_pdf
+
+    with pytest.raises(NFeParserError) as exc:
+        parse_nfse_joinville_pdf(b"not a pdf at all")
+    assert exc.value.code == "INVALID_PDF"
+
+
+def test_parse_pdf_nao_e_nfse_joinville():
+    """PDF válido mas que não contém a assinatura do layout Joinville."""
+    from app.services.nfse_joinville_pdf_parser import parse_nfse_joinville_pdf
+
+    # PDF minimal de 1 página com texto "Hello World"
+    minimal_pdf = (
+        b"%PDF-1.4\n"
+        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<<>>>>endobj\n"
+        b"4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 100 700 Td (Hello World) Tj ET\nendstream\nendobj\n"
+        b"xref\n0 5\n0000000000 65535 f \n0000000010 00000 n \n0000000053 00000 n \n0000000100 00000 n \n0000000179 00000 n \n"
+        b"trailer<</Size 5/Root 1 0 R>>\nstartxref\n270\n%%EOF"
+    )
+
+    with pytest.raises(NFeParserError) as exc:
+        parse_nfse_joinville_pdf(minimal_pdf)
+    # Pode falhar como INVALID_PDF (se pdfplumber rejeitar) ou NOT_NFSE_JOINVILLE
+    assert exc.value.code in ("INVALID_PDF", "NOT_NFSE_JOINVILLE")
