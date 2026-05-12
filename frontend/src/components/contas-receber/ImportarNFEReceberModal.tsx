@@ -58,6 +58,13 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
     setStage('uploading');
     setErrorInfo(null);
     try {
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      const maxBytes = isPdf ? 5 * 1024 * 1024 : 1 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        toast('error', `Arquivo maior que ${maxBytes / (1024 * 1024)} MB`);
+        setStage('idle');
+        return;
+      }
       const data = await nfeService.previewReceber(file);
       setPreview(data);
       setDescricao(data.sugestoes.descricao);
@@ -82,10 +89,10 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
       if (detail) {
         setErrorInfo(detail);
         if (detail.code !== 'DUPLICATE') {
-          toast('error', detail.message || 'Erro ao processar XML');
+          toast('error', detail.message || 'Erro ao processar arquivo');
         }
       } else {
-        toast('error', 'Erro ao enviar XML');
+        toast('error', 'Erro ao enviar arquivo');
       }
       setStage('error');
     }
@@ -144,7 +151,7 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 shrink-0">
-          <h2 className="text-[16px] font-semibold text-gray-900">Importar NF-e por XML</h2>
+          <h2 className="text-[16px] font-semibold text-gray-900">Importar Nota Fiscal</h2>
           <button onClick={handleClose} className="text-gray-300 hover:text-gray-500"><X size={16} /></button>
         </div>
 
@@ -152,12 +159,12 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
           {stage === 'idle' && (
             <div className="p-5 space-y-3">
               <p className="text-[14px] text-gray-600">
-                Selecione o XML da NF-e emitida pela sua empresa.
+                Selecione o XML da NF-e ou o PDF da NFS-e emitida pela sua empresa.
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xml,application/xml,text/xml"
+                accept=".xml,.pdf,application/xml,text/xml,application/pdf"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) handleFile(f);
@@ -170,7 +177,7 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
           {stage === 'uploading' && (
             <div className="p-10 flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-              <p className="text-[14px] text-gray-500">Processando XML...</p>
+              <p className="text-[14px] text-gray-500">Processando arquivo...</p>
             </div>
           )}
 
@@ -196,17 +203,30 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-md px-4 py-3">
                   <p className="text-[14px] font-semibold text-red-800">{errorInfo.code}</p>
-                  <p className="text-[13px] text-red-700 mt-1">{errorInfo.message || 'Erro ao processar XML'}</p>
+                  <p className="text-[13px] text-red-700 mt-1">{errorInfo.message || 'Erro ao processar arquivo'}</p>
                 </div>
               )}
               <button onClick={reset} className="text-[14px] text-blue-600 hover:underline">
-                Tentar com outro XML
+                Tentar com outro arquivo
               </button>
             </div>
           )}
 
           {(stage === 'reviewing' || stage === 'saving') && preview && (
             <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+              <div className="flex items-center gap-2">
+                <span className={`inline-block text-[11px] font-semibold px-2 py-0.5 rounded ${
+                  preview.parsed.modelo === 'NFSE'
+                    ? 'bg-purple-100 text-purple-800'
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {preview.parsed.modelo === 'NFSE' ? 'NFS-e' : 'NF-e'}
+                </span>
+                <span className="text-[13px] text-gray-500">
+                  Nº {preview.parsed.numero_nota}
+                  {preview.parsed.serie ? ` · Série ${preview.parsed.serie}` : ''}
+                </span>
+              </div>
               {!preview.cliente && (
                 <div className="bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
                   <p className="text-[13px] text-blue-700 font-medium">

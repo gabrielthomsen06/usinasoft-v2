@@ -177,7 +177,7 @@ export function ContasReceber() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">
-            <Upload size={14} /> Importar XML
+            <Upload size={14} /> Importar Nota
           </button>
           <button onClick={openCreate} className="flex items-center gap-1.5 bg-[#1a2340] text-white px-3.5 py-2 rounded-md text-[15px] font-medium hover:bg-[#243052] transition-colors">
             <Plus size={14} /> Nova Conta
