@@ -1,9 +1,9 @@
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 import re
 
-from app.schemas.nfe import NFeItemParsed, NFeParcelaParsed, NFeParsedData
+from app.schemas.nfe import NFeParcelaParsed, NFeParsedData
 
 
 class NFeParserError(Exception):
@@ -16,7 +16,7 @@ class NFeParserError(Exception):
 
 # ============= _normalize_cnpj =============
 
-def _normalize_cnpj(value: str) -> str:
+def _normalize_cnpj(value: Optional[str]) -> str:
     return re.sub(r"[^0-9]", "", value or "")
 
 
@@ -48,7 +48,10 @@ def _parse_data_emissao(text: str) -> date:
     if not m:
         raise NFeParserError("MISSING_FIELDS", "Data de emissão não encontrada no PDF")
     dia, mes, ano = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    return date(ano, mes, dia)
+    try:
+        return date(ano, mes, dia)
+    except ValueError as e:
+        raise NFeParserError("MISSING_FIELDS", "Data de emissão inválida no PDF") from e
 
 
 # ============= _parse_valor_brl =============

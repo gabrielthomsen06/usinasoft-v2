@@ -1,6 +1,5 @@
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -26,6 +25,10 @@ def test_normalize_cnpj_ja_sem_pontuacao():
 
 def test_normalize_cnpj_com_espacos():
     assert _normalize_cnpj("  53.428.953/0001-11  ") == "53428953000111"
+
+
+def test_normalize_cnpj_none_retorna_string_vazia():
+    assert _normalize_cnpj(None) == ""
 
 
 # ============= _parse_numero_serie =============
@@ -58,6 +61,13 @@ def test_parse_data_emissao_so_data():
 def test_parse_data_emissao_nao_encontrada():
     with pytest.raises(NFeParserError) as exc:
         _parse_data_emissao("sem data nenhuma")
+    assert exc.value.code == "MISSING_FIELDS"
+
+
+def test_parse_data_emissao_data_invalida():
+    """Data com dia/mês fora do range válido raises NFeParserError (não ValueError)."""
+    with pytest.raises(NFeParserError) as exc:
+        _parse_data_emissao("Data de Emissão: 31/02/2026")
     assert exc.value.code == "MISSING_FIELDS"
 
 
