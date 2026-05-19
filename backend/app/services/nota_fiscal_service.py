@@ -97,14 +97,11 @@ def _raise_duplicate(existing: NotaFiscal, contas_ids: List[uuid.UUID]) -> None:
 
 
 def _raise_wrong_direction(expected: str, parsed: NFeParsedData) -> None:
+    rotulo = "NFS-e" if parsed.modelo == "NFSE" else "NF-e"
     if expected == "pagar":
-        msg = (
-            "Esta NF-e foi emitida pela sua empresa — importe em Contas a Receber."
-        )
+        msg = f"Esta {rotulo} foi emitida pela sua empresa — importe em Contas a Receber."
     else:
-        msg = (
-            "Esta NF-e foi recebida por outra empresa — importe em Contas a Pagar."
-        )
+        msg = f"Esta {rotulo} foi recebida por outra empresa — importe em Contas a Pagar."
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail={
@@ -380,8 +377,7 @@ async def import_nfe_receber(
         db.add(conta)
         contas.append(conta)
 
-    # NFS-e chave nacional = 50 dígitos; NF-e 55/65 chave = 44 dígitos
-    modelo_nf = "NFSE" if len(payload.chave_acesso) == 50 else "55"
+    modelo_nf = payload.modelo
     nota = NotaFiscal(
         id=uuid.uuid4(),
         chave_acesso=payload.chave_acesso,

@@ -126,6 +126,7 @@ export function ImportarNFEReceberModal({ isOpen, onClose, onImported }: Importa
           vencimento: p.vencimento,
           valor: p.valor,
         })),
+        modelo: preview.parsed.modelo,
       };
       await nfeService.importReceber(payload);
       toast('success', `${parcelas.length} ${parcelas.length === 1 ? 'conta criada' : 'contas criadas'}!`);

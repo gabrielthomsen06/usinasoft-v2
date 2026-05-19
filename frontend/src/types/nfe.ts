@@ -117,6 +117,7 @@ export interface ImportNFeReceberPayload {
   observacoes?: string | null;
   data_emissao: string;
   parcelas: ImportNFeParcela[];
+  modelo: string;
 }
 
 export interface ImportNFeReceberResponse {

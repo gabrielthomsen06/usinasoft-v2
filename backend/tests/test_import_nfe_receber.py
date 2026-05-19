@@ -280,6 +280,7 @@ async def test_import_nfse_pdf_cria_conta_receber(
             {"vencimento": p["vencimento"], "valor": p["valor"]}
             for p in preview["parsed"]["parcelas"]
         ],
+        "modelo": preview["parsed"]["modelo"],
     }
     import_resp = await client.post("/api/contas-receber/import-nfe", json=payload)
     assert import_resp.status_code == 201, import_resp.text
@@ -326,6 +327,7 @@ async def test_import_nfse_pdf_duplicate(client: AsyncClient):
             {"vencimento": p["vencimento"], "valor": p["valor"]}
             for p in preview["parsed"]["parcelas"]
         ],
+        "modelo": preview["parsed"]["modelo"],
     }
     first = await client.post("/api/contas-receber/import-nfe", json=payload)
     assert first.status_code == 201

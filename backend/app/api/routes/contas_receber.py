@@ -29,7 +29,7 @@ MAX_XML_SIZE = 1 * 1024 * 1024  # 1 MB
 MAX_PDF_SIZE = 5 * 1024 * 1024  # 5 MB
 
 ALLOWED_MIMES_XML = ("text/xml", "application/xml", "application/octet-stream")
-ALLOWED_MIMES_PDF = ("application/pdf",)
+ALLOWED_MIMES_PDF = ("application/pdf", "application/octet-stream")
 
 
 @router.get("/", response_model=List[ContaReceberResponse])
