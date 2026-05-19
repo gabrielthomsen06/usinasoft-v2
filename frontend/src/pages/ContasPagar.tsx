@@ -50,6 +50,7 @@ export function ContasPagar() {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [mesAno, setMesAno] = useState(getCurrentMonth());
   const [vencimentoEditadoManual, setVencimentoEditadoManual] = useState(false);
   const [recalcularFuturas, setRecalcularFuturas] = useState(true);
@@ -298,7 +299,7 @@ export function ContasPagar() {
                             <button onClick={() => setUndoConfirmId(c.id)} className="p-1.5 text-gray-300 hover:text-amber-600 rounded transition-colors" title="Desfazer pagamento"><RotateCcw size={14} /></button>
                           )}
                           <button onClick={() => openEdit(c)} className="p-1.5 text-gray-300 hover:text-gray-600 rounded transition-colors" title="Editar"><Pencil size={14} /></button>
-                          <button onClick={() => handleDelete(c.id)} disabled={deletingId === c.id} className="p-1.5 text-gray-300 hover:text-red-500 rounded transition-colors disabled:opacity-50" title="Excluir"><Trash2 size={14} /></button>
+                          <button onClick={() => setDeleteConfirmId(c.id)} disabled={deletingId === c.id} className="p-1.5 text-gray-300 hover:text-red-500 rounded transition-colors disabled:opacity-50" title="Excluir"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -323,6 +324,24 @@ export function ContasPagar() {
             <div className="px-5 py-3 border-t border-gray-100 flex gap-2.5">
               <button onClick={() => setUndoConfirmId(null)} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
               <button onClick={() => handleUndoPayment(undoConfirmId)} className="flex-1 bg-amber-600 text-white py-2 rounded-md text-[15px] font-medium hover:bg-amber-700 transition-colors">Desfazer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h2 className="text-[16px] font-semibold text-gray-900">Excluir esta conta?</h2>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-[14px] text-gray-600">Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.</p>
+            </div>
+            <div className="px-5 py-3 border-t border-gray-100 flex gap-2.5">
+              <button onClick={() => setDeleteConfirmId(null)} className="flex-1 border border-gray-200 text-gray-500 py-2 rounded-md text-[15px] font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button onClick={() => { const id = deleteConfirmId; setDeleteConfirmId(null); handleDelete(id); }} className="flex-1 bg-red-600 text-white py-2 rounded-md text-[15px] font-medium hover:bg-red-700 transition-colors">Excluir</button>
             </div>
           </div>
         </div>
