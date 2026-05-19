@@ -59,7 +59,10 @@ async def list_contas_pagar(
     if filters:
         query = query.where(and_(*filters))
 
-    query = query.order_by(ContaPagar.data_vencimento.desc()).offset(skip).limit(limit)
+    query = query.order_by(
+        ContaPagar.data_vencimento.asc(),
+        ContaPagar.created_at.asc(),
+    ).offset(skip).limit(limit)
     result = await db.execute(query)
     return list(result.scalars().all())
 
