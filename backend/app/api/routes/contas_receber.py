@@ -26,6 +26,10 @@ router = APIRouter(prefix="/contas-receber", tags=["contas-receber"])
 
 
 MAX_XML_SIZE = 1 * 1024 * 1024  # 1 MB
+MAX_PDF_SIZE = 5 * 1024 * 1024  # 5 MB
+
+ALLOWED_MIMES_XML = ("text/xml", "application/xml", "application/octet-stream")
+ALLOWED_MIMES_PDF = ("application/pdf", "application/octet-stream")
 
 
 @router.get("/", response_model=List[ContaReceberResponse])
@@ -60,22 +64,35 @@ async def preview_nfe_receber_route(
     db: AsyncSession = Depends(get_db),
     _: Usuario = Depends(get_current_admin_user),
 ) -> PreviewNFeReceberResponse:
-    if file.content_type and file.content_type not in (
-        "text/xml", "application/xml", "application/octet-stream",
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"code": "INVALID_CONTENT_TYPE", "message": "Envie um arquivo XML"},
-        )
+    filename = (file.filename or "").lower()
+    is_pdf = filename.endswith(".pdf") or file.content_type == "application/pdf"
 
-    content = await file.read(MAX_XML_SIZE + 1)
-    if len(content) > MAX_XML_SIZE:
+    if is_pdf:
+        if file.content_type and file.content_type not in ALLOWED_MIMES_PDF:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_CONTENT_TYPE", "message": "Envie um arquivo PDF"},
+            )
+        max_size = MAX_PDF_SIZE
+    else:
+        if file.content_type and file.content_type not in ALLOWED_MIMES_XML:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "INVALID_CONTENT_TYPE", "message": "Envie XML ou PDF"},
+            )
+        max_size = MAX_XML_SIZE
+
+    content = await file.read(max_size + 1)
+    if len(content) > max_size:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail={"code": "FILE_TOO_LARGE", "message": "Arquivo maior que 1 MB"},
+            detail={
+                "code": "FILE_TOO_LARGE",
+                "message": f"Arquivo maior que {max_size // (1024*1024)} MB",
+            },
         )
 
-    return await preview_nfe_receber(db, content)
+    return await preview_nfe_receber(db, content, is_pdf=is_pdf)
 
 
 @router.post("/import-nfe", response_model=ImportNFeReceberResponse, status_code=status.HTTP_201_CREATED)

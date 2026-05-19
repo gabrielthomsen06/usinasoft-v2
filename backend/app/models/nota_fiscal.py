@@ -16,11 +16,11 @@ class NotaFiscal(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     chave_acesso: Mapped[str] = mapped_column(
-        String(44), unique=True, nullable=False, index=True
+        String(50), unique=True, nullable=False, index=True
     )
     numero_nota: Mapped[str] = mapped_column(String(20), nullable=False)
     serie: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
-    modelo: Mapped[str] = mapped_column(String(2), nullable=False)
+    modelo: Mapped[str] = mapped_column(String(10), nullable=False)
     cnpj_emitente: Mapped[str] = mapped_column(String(14), nullable=False, index=True)
     nome_emitente: Mapped[str] = mapped_column(String(255), nullable=False)
     valor_total: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)

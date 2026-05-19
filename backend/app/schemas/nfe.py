@@ -110,6 +110,7 @@ class ImportNFeReceberRequest(BaseModel):
     observacoes: Optional[str] = None
     data_emissao: date
     parcelas: List[ParcelaImportInput]
+    modelo: str = "55"  # "55" for NF-e, "NFSE" for NFS-e
 
 
 class ImportNFeReceberResponse(BaseModel):

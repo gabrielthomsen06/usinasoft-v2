@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b /s \"C:\\\\Users\\\\gabri\\\\usinasoft-v2\")",
+      "Bash(findstr /i \"nota.*162\\\\|viqua\\\\|.pdf\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\gabri\\\\usinasoft-v2\" -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match \"\\(?i\\)nota|viqua|\\\\.pdf$\" } | Select-Object FullName, Length)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(cp \"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\Nota 162 serviço viqua.pdf\" \"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\.claude\\\\worktrees\\\\laughing-antonelli-31210d\\\\backend\\\\tests\\\\fixtures\\\\nfse\\\\nfse_joinville_162.pdf\")",
+      "Bash(.\\\\venv\\\\Scripts\\\\Activate.ps1)",
+      "Bash(pip install *)",
+      "Bash(pwsh -Command \". .\\\\venv\\\\Scripts\\\\Activate.ps1; pip install pdfplumber==0.11.4\")",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m pip install pdfplumber==0.11.4)",
+      "Bash(awk '{print \"Size:\", $5}')",
+      "Bash(git commit *)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m alembic current)",
+      "Bash(\"C:/Program Files/Docker/Docker/resources/bin/docker.exe\" ps --format \"table {{.Names}}\\\\t{{.Status}}\")",
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "Bash(pg_isready -h 127.0.0.1 -p 5432)",
+      "Bash(ls \"C:\\\\Users\\\\gabri\\\\AppData\\\\Roaming\\\\postgresql\" 2>&1; ls \"$HOME/.pgpass\" 2>&1)",
+      "Bash(grep -v \"^$\")",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m pytest tests/test_import_nfe_receber.py tests/test_import_nfe.py tests/test_nfe_parser.py -v)",
+      "Bash('C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe' -c ' *)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m alembic --x offline=true history --verbose)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m alembic history --verbose)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m alembic heads)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\Activate.ps1\")",
+      "Bash(pytest tests/test_import_nfe_receber.py tests/test_import_nfe.py tests/test_nfe_parser.py -v)",
+      "Bash(\"C:\\\\Users\\\\gabri\\\\usinasoft-v2\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m pytest tests/test_nfse_joinville_parser.py -v)",
+      "Bash(python -m pytest tests/test_nfse_joinville_parser.py -v)"
+    ]
+  }
+}
