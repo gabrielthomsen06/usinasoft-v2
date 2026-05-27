@@ -1,370 +1,257 @@
 # UsinaSoft v2
 
-**Sistema de Gerenciamento de Producao para Usinagem**
+**Sistema corporativo de gestão de produção e financeiro para usinagem.**
 
-O UsinaSoft v2 e um ERP web desenvolvido para empresas de usinagem que precisam controlar suas ordens de producao, pecas e clientes de forma organizada e eficiente.
-
----
-
-## Sobre o Sistema
-
-O UsinaSoft resolve o problema de controle de producao em empresas de usinagem, onde e comum o uso de planilhas ou anotacoes manuais para rastrear pedidos, pecas e prazos de entrega. Com ele, o gestor tem visao completa da operacao em tempo real.
-
-### Principais Funcionalidades
-
-| Modulo | Descricao |
-|--------|-----------|
-| **Dashboard** | Visao geral com metricas: total de pecas, pecas concluidas, OPs abertas, clientes cadastrados e barra de progresso |
-| **Clientes** | Cadastro completo com nome, contato, e-mail e endereco. Busca por nome, e-mail ou contato |
-| **Ordens de Producao (OPs)** | Criacao e gestao de OPs com codigo, cliente vinculado, status e observacoes. Progresso automatico baseado nas pecas |
-| **Pecas** | Cadastro detalhado com codigo, descricao, pedido/NF, quantidade, data de entrega e status. Filtros por status e busca |
-| **Autenticacao** | Login seguro com JWT (access + refresh token). Registro protegido (so usuarios logados criam novas contas) |
-
-### Status Disponiveis
-
-**Ordens de Producao:**
-- `Aberta` — OP criada, aguardando inicio
-- `Em Andamento` — Pecas sendo produzidas
-- `Concluida` — Todas as pecas finalizadas
-
-**Pecas:**
-- `Em Fila` — Aguardando inicio da producao
-- `Em Andamento` — Sendo produzida
-- `Pausada` — Producao temporariamente parada
-- `Concluida` — Peca finalizada
-- `Cancelada` — Producao cancelada
+Documento interno. Software proprietário — uso restrito à organização. A redistribuição, publicação ou cópia parcial deste código, sua documentação ou seus artefatos exige autorização formal.
 
 ---
 
-## Fluxograma do Sistema
+## 1. Visão Geral
 
-### Navegacao Geral
+O UsinaSoft v2 é uma aplicação web corporativa que centraliza a operação de empresas de usinagem em três frentes:
 
-```
-                    +------------------+
-                    |  Usuario acessa  |
-                    |    o sistema     |
-                    +--------+---------+
-                             |
-                             v
-                    +------------------+
-                    |  Tela de Login   |
-                    |  (email + senha) |
-                    +--------+---------+
-                             |
-                     autenticacao JWT
-                             |
-                             v
-                    +------------------+
-                    |    Dashboard     |
-                    | (visao geral)    |
-                    +--------+---------+
-                             |
-              +--------------+--------------+
-              |              |              |
-              v              v              v
-     +--------+---+  +------+------+  +----+--------+
-     |  Clientes  |  |     OPs     |  |    Pecas    |
-     +--------+---+  +------+------+  +----+--------+
-              |              |              |
-              v              v              v
-     +--------+---+  +------+------+  +----+--------+
-     | Cadastrar  |  | Criar OP    |  | Cadastrar   |
-     | Editar     |  | Vincular    |  | Alterar     |
-     | Excluir    |  | cliente     |  | status      |
-     | Buscar     |  | Acompanhar  |  | Excluir     |
-     +------------+  | progresso   |  | Filtrar     |
-                     +-------------+  +-------------+
-```
+- **Produção** — gestão de Ordens de Produção (OPs), peças e clientes, com acompanhamento de progresso em tempo real.
+- **Financeiro** — contas a pagar e a receber, lançamentos, fornecedores e dashboard financeiro.
+- **Fiscal** — importação automatizada de NF-e (XML modelo 55) e NFS-e (PDF — município de Joinville), com vínculo automático em contas a pagar/receber.
 
-### Fluxo de Producao (Passo a Passo)
-
-```
-  1. CADASTRAR CLIENTE          2. CRIAR OP                  3. CADASTRAR PECAS
-  +---------------------+      +---------------------+      +---------------------+
-  | Nome: Empresa ABC   |      | Codigo: OP-2026-001 |      | Codigo: PC-001      |
-  | Contato: (11) 9999  | ---> | Cliente: Empresa ABC| ---> | OP: OP-2026-001     |
-  | Email: abc@mail.com |      | Status: Aberta      |      | Qtd: 50             |
-  +---------------------+      +---------------------+      | Entrega: 30/04/2026 |
-                                                             | Status: Em Fila     |
-                                                             +---------------------+
-
-  4. ACOMPANHAR PRODUCAO        5. ATUALIZAR STATUS          6. CONCLUSAO
-  +---------------------+      +---------------------+      +---------------------+
-  | Dashboard mostra:   |      | Peca PC-001:        |      | OP-2026-001:        |
-  | - 50 pecas total    |      | Em Fila             |      | Status: Concluida   |
-  | - 0 concluidas      | ---> | -> Em Andamento     | ---> | Progresso: 100%     |
-  | - Progresso: 0%     |      | -> Concluida        |      | 50/50 pecas         |
-  +---------------------+      +---------------------+      +---------------------+
-```
-
-### Fluxo de Autenticacao
-
-```
-  +----------+     POST /api/auth/login      +---------+     Valida email/senha    +----------+
-  |          | ----(email + password)-------> |         | -----------------------> |          |
-  | Frontend |                                | Backend |                          | Database |
-  |          | <----(access_token +           |         | <----(usuario)---------- |          |
-  +----------+      refresh_token)            +---------+                          +----------+
-       |                                           |
-       | Armazena tokens                           | Verifica JWT em
-       | no localStorage                           | cada request
-       |                                           |
-       +------- Authorization: Bearer token ------>+
-```
+A solução substitui o controle por planilhas e anotações manuais por um sistema único, auditável, com base de dados relacional e acesso autenticado por usuário.
 
 ---
 
-## Arquitetura
+## 2. Objetivo do Projeto
 
-```
-  Internet
-     |
-     v
-  +------------------+
-  |  Caddy (HTTPS)   |  Porta 80/443 — Reverse Proxy + SSL automatico
-  +--------+---------+
-           |
-           v
-  +------------------+
-  |  Nginx (Frontend)|  Serve o React SPA (arquivos estaticos)
-  |  + Proxy /api    |  Redireciona /api/* para o Backend
-  +--------+---------+
-           |
-     +-----+------+
-     |            |
-     v            v
-  +------+   +--------+
-  | React|   | FastAPI|  Backend Python — API REST
-  | SPA  |   |  API   |
-  +------+   +---+----+
-                  |
-                  v
-           +------------+
-           | PostgreSQL  |  Banco de dados relacional
-           +------------+
-```
+Reduzir o retrabalho operacional e a perda de informação típicos de fluxos baseados em planilhas, oferecendo:
 
-### Stack Tecnologica
-
-| Camada | Tecnologia | Versao |
-|--------|-----------|--------|
-| **Frontend** | React + TypeScript | 18.x |
-| **Estilizacao** | Tailwind CSS | 3.4 |
-| **Icones** | Lucide React | 0.309 |
-| **Formularios** | React Hook Form + Zod | 7.x |
-| **HTTP Client** | Axios | 1.6 |
-| **Roteamento** | React Router DOM | 6.x |
-| **Backend** | FastAPI (Python) | 0.109 |
-| **ORM** | SQLAlchemy (async) | 2.0 |
-| **Migrations** | Alembic | 1.13 |
-| **Auth** | JWT (python-jose) + bcrypt | — |
-| **Banco de Dados** | PostgreSQL | 15 |
-| **Reverse Proxy** | Caddy | 2.x |
-| **Web Server** | Nginx | Alpine |
-| **Containers** | Docker + Docker Compose | 29.x |
+- Rastreabilidade ponta a ponta entre cliente → OP → peças → notas fiscais → contas.
+- Visibilidade financeira consolidada (a pagar, a receber, lançamentos, fluxo de caixa).
+- Padronização do processo fiscal de entrada via NF-e/NFS-e.
+- Controle de acesso por papéis (admin × usuário).
+- Plataforma única para gestão e operação, acessível por navegador.
 
 ---
 
-## Estrutura do Projeto
+## 3. Contexto de Negócio
 
-```
-usinasoft-v2/
-|-- backend/
-|   |-- app/
-|   |   |-- api/
-|   |   |   |-- deps.py              # Dependencias (auth, DB session)
-|   |   |   |-- routes/
-|   |   |       |-- auth.py          # Login, registro, refresh token
-|   |   |       |-- clientes.py      # CRUD clientes
-|   |   |       |-- ops.py           # CRUD ordens de producao
-|   |   |       |-- pecas.py         # CRUD pecas + status
-|   |   |       |-- usuarios.py      # Perfil e gestao de usuarios
-|   |   |-- core/
-|   |   |   |-- config.py            # Configuracoes (env vars)
-|   |   |   |-- security.py          # Hash de senha, JWT
-|   |   |-- db/
-|   |   |   |-- database.py          # Engine async, session factory
-|   |   |-- models/
-|   |   |   |-- cliente.py           # Modelo Cliente
-|   |   |   |-- ordem_producao.py    # Modelo OrdemProducao
-|   |   |   |-- peca.py              # Modelo Peca
-|   |   |   |-- usuario.py           # Modelo Usuario
-|   |   |-- schemas/
-|   |   |   |-- cliente.py           # Schemas Pydantic
-|   |   |   |-- ordem_producao.py    # Schemas com campos computados
-|   |   |   |-- peca.py              # Schemas Pydantic
-|   |   |   |-- usuario.py           # Schemas Pydantic
-|   |   |-- services/
-|   |   |   |-- auth_service.py      # Logica de autenticacao
-|   |   |   |-- cliente_service.py   # Logica de negocios clientes
-|   |   |   |-- op_service.py        # Logica de negocios OPs
-|   |   |   |-- peca_service.py      # Logica de negocios pecas
-|   |   |   |-- usuario_service.py   # Logica de negocios usuarios
-|   |   |-- main.py                  # App FastAPI, middlewares, rotas
-|   |-- alembic/                     # Migrations do banco
-|   |-- requirements.txt
-|   |-- Dockerfile
-|
-|-- frontend/
-|   |-- src/
-|   |   |-- components/
-|   |   |   |-- layout/              # Layout, Sidebar, Header
-|   |   |   |-- ui/                  # Button, Input, Modal, Badge, Toast, Card
-|   |   |-- contexts/
-|   |   |   |-- AuthContext.tsx       # Contexto de autenticacao
-|   |   |-- hooks/
-|   |   |   |-- useAuth.ts           # Hook de autenticacao
-|   |   |-- pages/
-|   |   |   |-- Login.tsx            # Tela de login
-|   |   |   |-- Dashboard.tsx        # Dashboard com metricas
-|   |   |   |-- Clientes.tsx         # Gestao de clientes
-|   |   |   |-- Ops.tsx              # Gestao de OPs
-|   |   |   |-- Pecas.tsx            # Gestao de pecas
-|   |   |-- services/
-|   |   |   |-- api.ts               # Axios instance + interceptors
-|   |   |   |-- auth.ts              # Servico de autenticacao
-|   |   |   |-- clientes.ts          # Servico de clientes
-|   |   |   |-- ops.ts               # Servico de OPs
-|   |   |   |-- pecas.ts             # Servico de pecas
-|   |   |-- types/
-|   |       |-- index.ts             # Interfaces TypeScript
-|   |-- Dockerfile
-|   |-- nginx.conf
-|
-|-- docker-compose.yml               # Ambiente local (dev)
-|-- docker-compose.prod.yml          # Ambiente de producao
-|-- Caddyfile                         # Config do Caddy (HTTPS)
-|-- .env.production                   # Template de variaveis
-|-- deploy.sh                         # Script de setup do servidor
-|-- start.sh                          # Script de start da aplicacao
-|-- create-admin.sh                   # Script para criar usuario admin
-```
+| Tópico | Descrição |
+|---|---|
+| Setor | Indústria de usinagem sob encomenda |
+| Stakeholders | Diretoria, administrativo, financeiro e produção |
+| Documentos fiscais | NF-e (modelo 55) de entrada e NFS-e (Joinville/SC) de saída |
+| Regime de dados | LGPD aplicável (clientes, fornecedores, usuários) |
+| Tipo de operação | Multiusuário, transacional, web (HTTPS) |
+| Modelo de licenciamento | Software interno proprietário |
 
 ---
 
-## API Endpoints
+## 4. Arquitetura em Alto Nível
 
-### Autenticacao
-| Metodo | Endpoint | Descricao | Auth |
-|--------|----------|-----------|------|
-| POST | `/api/auth/login` | Login (retorna tokens) | Nao |
-| POST | `/api/auth/register` | Criar usuario | Sim |
-| POST | `/api/auth/refresh` | Renovar token | Nao |
+```
+                 Internet (HTTPS)
+                       │
+                       ▼
+              ┌────────────────────┐
+              │   Caddy (reverse   │   TLS automático
+              │    proxy + ACME)   │   Termina HTTPS
+              └─────────┬──────────┘
+                        │
+                        ▼
+              ┌────────────────────┐
+              │  Nginx (SPA host)  │   Serve build do frontend
+              │    + proxy /api    │   Encaminha API
+              └────┬───────────┬───┘
+                   │           │
+                   ▼           ▼
+            ┌──────────┐  ┌──────────────┐
+            │  React   │  │   FastAPI    │   API REST (Python)
+            │   SPA    │  │   (async)    │
+            └──────────┘  └──────┬───────┘
+                                 │
+                                 ▼
+                          ┌────────────┐
+                          │ PostgreSQL │   Modelo relacional
+                          └────────────┘
+```
 
-### Usuarios
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| GET | `/api/usuarios/me` | Perfil do usuario logado |
-| PUT | `/api/usuarios/me` | Atualizar perfil |
-| GET | `/api/usuarios/` | Listar todos |
-| GET | `/api/usuarios/{id}` | Buscar por ID |
-| DELETE | `/api/usuarios/{id}` | Remover |
-
-### Clientes
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| GET | `/api/clientes/` | Listar todos |
-| POST | `/api/clientes/` | Criar |
-| GET | `/api/clientes/{id}` | Buscar por ID |
-| PUT | `/api/clientes/{id}` | Atualizar |
-| DELETE | `/api/clientes/{id}` | Remover |
-
-### Ordens de Producao
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| GET | `/api/ops/` | Listar todas |
-| POST | `/api/ops/` | Criar |
-| GET | `/api/ops/{id}` | Buscar por ID (inclui pecas) |
-| PUT | `/api/ops/{id}` | Atualizar |
-| DELETE | `/api/ops/{id}` | Remover |
-
-### Pecas
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| GET | `/api/pecas/` | Listar (filtro por status) |
-| POST | `/api/pecas/` | Criar |
-| GET | `/api/pecas/{id}` | Buscar por ID |
-| PUT | `/api/pecas/{id}` | Atualizar |
-| PATCH | `/api/pecas/{id}/status` | Alterar status |
-| DELETE | `/api/pecas/{id}` | Remover |
+Três camadas independentes (frontend SPA, backend API, banco), orquestradas por containers e isoladas em rede interna. Apenas o reverse proxy é exposto publicamente.
 
 ---
 
-## Como Usar
+## 5. Tecnologias Utilizadas
 
-### Requisitos
-- Docker e Docker Compose instalados
+### Backend
+| Camada | Tecnologia |
+|---|---|
+| Linguagem | Python 3.11 |
+| Framework Web | FastAPI |
+| ORM | SQLAlchemy 2.x (assíncrono) |
+| Migrations | Alembic |
+| Autenticação | JWT (access + refresh) — `python-jose` + `passlib`/`bcrypt` |
+| Validação | Pydantic v2 |
+| Banco | PostgreSQL 15 |
+| Parser fiscal | `defusedxml` (NF-e XML), `pymupdf` (NFS-e PDF) |
 
-### Ambiente Local (Desenvolvimento)
-```bash
-git clone https://github.com/gabrielthomsen06/usinasoft-v2.git
-cd usinasoft-v2
+### Frontend
+| Camada | Tecnologia |
+|---|---|
+| Framework | React 18 + TypeScript |
+| Build | Vite |
+| Estilização | Tailwind CSS |
+| Roteamento | React Router DOM |
+| Formulários | React Hook Form + Zod |
+| HTTP | Axios |
+| Ícones | Lucide React |
 
-docker compose up -d --build
-docker exec usinasoft_backend alembic upgrade head
-
-# Acessar: http://localhost
-```
-
-### Ambiente de Producao (DigitalOcean)
-```bash
-cd /opt/usinasoft
-cp .env.production .env
-nano .env  # preencher variaveis
-
-chmod +x start.sh create-admin.sh
-./start.sh
-./create-admin.sh
-```
-
----
-
-## Modelo de Dados
-
-```
-  +------------+       +------------------+       +------------+
-  |  usuarios  |       | ordens_producao  |       |  clientes  |
-  +------------+       +------------------+       +------------+
-  | id (UUID)  |       | id (UUID)        |       | id (UUID)  |
-  | email      |       | codigo (unique)  |  +--->| nome       |
-  | password   |       | cliente_id (FK)  |--+    | contato    |
-  | first_name |       | status (enum)    |       | email      |
-  | last_name  |       | observacoes      |       | endereco   |
-  | is_active  |       | created_at       |       | created_at |
-  | created_at |       | updated_at       |       | updated_at |
-  | updated_at |       +--------+---------+       +-----+------+
-  +------------+                |                        |
-                                | 1:N                    | 1:N
-                                v                        v
-                         +------------+           (tambem referenciado
-                         |   pecas    |            por pecas.cliente_id)
-                         +------------+
-                         | id (UUID)             |
-                         | ordem_producao_id (FK)|
-                         | cliente_id (FK)       |
-                         | codigo (unique)       |
-                         | descricao             |
-                         | pedido                |
-                         | quantidade            |
-                         | data_entrega          |
-                         | status (enum)         |
-                         | created_at            |
-                         | updated_at            |
-                         +-----------------------+
-```
+### Infraestrutura
+| Camada | Tecnologia |
+|---|---|
+| Containers | Docker + Docker Compose |
+| Reverse proxy / TLS | Caddy 2 (Let's Encrypt) |
+| Web server estático | Nginx (Alpine) |
 
 ---
 
-## Infraestrutura de Producao
+## 6. Responsabilidades dos Módulos
 
-| Componente | Detalhe |
-|------------|---------|
-| **Provedor** | DigitalOcean |
-| **Servidor** | Droplet 2GB RAM, 1 vCPU, 35GB NVMe SSD |
-| **SO** | Ubuntu 22.04 LTS |
-| **IP** | 165.22.190.242 |
-| **Backup** | Diario automatico (retencao 7 dias) |
-| **Firewall** | UFW (portas 22, 80, 443) |
-| **Swap** | 2GB |
-| **Custo** | ~$18.40/mes |
+### Backend (`backend/app/`)
+| Módulo | Responsabilidade |
+|---|---|
+| `api/routes/` | Endpoints HTTP por contexto (auth, usuários, clientes, OPs, peças, fornecedores, contas a pagar/receber, lançamentos, dashboard financeiro). |
+| `api/deps.py` | Dependências comuns: sessão de banco, usuário autenticado, usuário ativo, usuário admin. |
+| `core/config.py` | Configuração via env vars com validações fortes (chave secreta, CNPJ). |
+| `core/security.py` | Hash de senha (bcrypt) e geração/validação de JWT. |
+| `db/database.py` | Engine assíncrona, session factory, dependency de sessão por requisição. |
+| `models/` | Modelos SQLAlchemy (`Usuario`, `Cliente`, `OrdemProducao`, `Peca`, `Fornecedor`, `ContaPagar`, `ContaReceber`, `Lancamento`, `NotaFiscal`). |
+| `schemas/` | Schemas Pydantic de entrada/saída (validação e serialização). |
+| `services/` | Regras de negócio por contexto, mantendo as rotas finas. |
+| `services/nfe_parser.py` | Parsing seguro de XML de NF-e (modelo 55), com validação de status e chave de acesso. |
+| `services/nfse_joinville_pdf_parser.py` | Parsing de NFS-e de Joinville a partir de PDF. |
+| `services/nota_fiscal_service.py` | Orquestração de preview e importação fiscal, vinculando contas, fornecedores/clientes e parcelas. |
+| `alembic/` | Versionamento do schema do banco. |
+
+### Frontend (`frontend/src/`)
+| Módulo | Responsabilidade |
+|---|---|
+| `pages/` | Telas: Login, Dashboard, Clientes, OPs, Peças, Fornecedores, Contas a Pagar/Receber, Lançamentos, Dashboard Financeiro. |
+| `components/layout/` | Layout principal, sidebar e header autenticados. |
+| `components/ui/` | Componentes visuais reutilizáveis (botões, inputs, modais, badges, toasts, cards). |
+| `contexts/AuthContext.tsx` | Estado global de autenticação. |
+| `hooks/` | Hooks utilitários (autenticação e demais). |
+| `services/` | Camada de integração com a API (axios + interceptors). |
+| `types/` | Contratos TypeScript compartilhados entre páginas e serviços. |
+
+---
+
+## 7. Domínios e Modelo de Dados (alto nível)
+
+```
+            ┌──────────┐         ┌───────────────────┐
+            │ usuarios │         │ ordens_producao   │
+            └──────────┘         └─────────┬─────────┘
+                                           │ 1:N
+                                           ▼
+   ┌──────────┐  1:N  ┌──────────┐  N:1   ┌──────┐
+   │ clientes │──────▶│  pecas   │◀───────│ OPs  │
+   └──────────┘       └──────────┘        └──────┘
+
+   ┌──────────────┐  1:N  ┌─────────────────┐
+   │ fornecedores │──────▶│ contas_a_pagar  │
+   └──────────────┘       └─────────────────┘
+
+   ┌──────────┐  1:N  ┌────────────────────┐
+   │ clientes │──────▶│ contas_a_receber   │
+   └──────────┘       └────────────────────┘
+
+                ┌──────────────┐
+                │ lancamentos  │   (movimentos financeiros)
+                └──────────────┘
+
+                ┌──────────────┐
+                │ notas_fiscais│   (rastro fiscal de cada importação)
+                └──────────────┘
+```
+
+Entidades-chave: `Usuario`, `Cliente`, `Fornecedor`, `OrdemProducao`, `Peca`, `ContaPagar`, `ContaReceber`, `Lancamento`, `NotaFiscal`.
+
+---
+
+## 8. Fluxos Principais
+
+### 8.1 Produção
+1. Cadastro de cliente.
+2. Criação da Ordem de Produção (vinculada ao cliente).
+3. Cadastro de peças da OP, com prazo de entrega.
+4. Acompanhamento de status por peça (`Em fila → Em andamento → Concluída`/`Pausada`/`Cancelada`).
+5. Progresso da OP é calculado automaticamente a partir das peças.
+
+### 8.2 Autenticação
+1. Login (e-mail + senha) → emite **access token** e **refresh token**.
+2. Acesso autenticado via header `Authorization: Bearer …`.
+3. Renovação do access token via endpoint de refresh.
+4. Criação de novos usuários restrita a administradores.
+
+### 8.3 Financeiro
+1. Cadastro de fornecedores e clientes.
+2. Lançamento manual de contas a pagar/receber, com suporte a parcelamento.
+3. Lançamentos financeiros refletem no Dashboard Financeiro (totais por período, por status).
+4. Encerramento (baixa) das contas conforme pagamento/recebimento.
+
+### 8.4 Importação Fiscal (NF-e / NFS-e)
+1. Upload do XML (NF-e modelo 55) ou PDF (NFS-e Joinville).
+2. Validação de tamanho e tipo de arquivo.
+3. Parsing seguro e checagem de direção (emitida pela empresa → "a receber"; recebida pela empresa → "a pagar").
+4. Detecção de duplicidade pela chave de acesso.
+5. Sugestão automática de descrição, categoria e vínculo com fornecedor/cliente existente.
+6. Confirmação gera o registro de `NotaFiscal` e as parcelas em `ContasPagar`/`ContasReceber`.
+
+---
+
+## 9. Controle de Acesso
+
+| Papel | Permissões |
+|---|---|
+| `admin` | Acesso completo, incluindo gestão de usuários e módulos financeiro/fiscal. |
+| `user` | Acesso à operação de produção (clientes, OPs, peças) e ao próprio perfil. Sem acesso aos módulos financeiro e fiscal. |
+
+Proteções implementadas:
+- Usuário não pode excluir a própria conta.
+- Não é permitido excluir o último admin ativo do sistema.
+- Endpoints fiscais e financeiros restritos a `admin`.
+
+---
+
+## 10. Superfície da API (resumo)
+
+Prefixo único: `/api`.
+
+| Domínio | Prefixo |
+|---|---|
+| Autenticação | `/api/auth/*` |
+| Usuários | `/api/usuarios/*` |
+| Clientes | `/api/clientes/*` |
+| Ordens de Produção | `/api/ops/*` |
+| Peças | `/api/pecas/*` |
+| Fornecedores | `/api/fornecedores/*` |
+| Contas a Receber | `/api/contas-receber/*` |
+| Contas a Pagar | `/api/contas-pagar/*` |
+| Lançamentos | `/api/lancamentos/*` |
+| Dashboard Financeiro | `/api/dashboard-financeiro/*` |
+
+A documentação interativa (`/docs`, `/redoc`) está disponível apenas com `DEBUG=true` (uso restrito a ambientes não produtivos).
+
+---
+
+## 11. Documentação Interna Relevante
+
+| Documento | Conteúdo |
+|---|---|
+| `MELHORIAS.md` | Backlog técnico e roadmap interno de melhorias. |
+| `docs/` | Documentação técnica e de processo (uso restrito). |
+| `backend/alembic/` | Histórico de evolução do schema (migrations). |
+
+A documentação operacional (deploy, rotação de credenciais, runbooks) é mantida fora deste repositório, em base interna restrita à equipe responsável.
+
+---
+
+## 12. Propriedade Intelectual
+
+Este software, sua arquitetura, modelos de dados, código-fonte, documentação e quaisquer artefatos derivados são de propriedade exclusiva da organização. O acesso a este repositório é restrito a colaboradores autorizados e está sujeito às políticas internas de segurança e confidencialidade.
