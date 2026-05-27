@@ -1,36 +1,36 @@
 #!/bin/bash
 # ============================================
 #  Criar usuário administrador
+#
+#  A senha é lida em prompt silencioso (read -s) e enviada ao
+#  container via stdin (docker exec -i). Ela NUNCA é interpolada
+#  em código Python nem aparece em argv/ps.
 # ============================================
+set -euo pipefail
+
+CONTAINER="${USINASOFT_BACKEND_CONTAINER:-usinasoft_backend}"
+
+if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+    echo "Container '$CONTAINER' não está em execução." >&2
+    exit 1
+fi
 
 echo "=== Criar Usuário Admin ==="
-echo ""
+echo
 
-read -p "Email: " ADMIN_EMAIL
-read -p "Primeiro nome: " ADMIN_FIRST
-read -p "Último nome: " ADMIN_LAST
-read -s -p "Senha: " ADMIN_PASS
-echo ""
+read -r -p "Email: " ADMIN_EMAIL
+read -r -p "Primeiro nome: " ADMIN_FIRST
+read -r -p "Último nome: " ADMIN_LAST
+read -r -s -p "Senha: " ADMIN_PASS
+echo
 
-docker exec usinasoft_backend python -c "
-import asyncio
-from app.db.database import AsyncSessionLocal
-from app.services.usuario_service import create_usuario
-from app.schemas.usuario import UsuarioCreate
+if [ -z "$ADMIN_EMAIL" ] || [ -z "$ADMIN_FIRST" ] || [ -z "$ADMIN_LAST" ] || [ -z "$ADMIN_PASS" ]; then
+    echo "Todos os campos são obrigatórios." >&2
+    exit 1
+fi
 
-async def main():
-    async with AsyncSessionLocal() as db:
-        user = await create_usuario(db, UsuarioCreate(
-            email='$ADMIN_EMAIL',
-            password='$ADMIN_PASS',
-            first_name='$ADMIN_FIRST',
-            last_name='$ADMIN_LAST'
-        ))
-        await db.commit()
-        print(f'Usuario criado com sucesso: {user.email}')
+printf '%s\n' "$ADMIN_PASS" | docker exec -i "$CONTAINER" \
+    python -m scripts.create_admin "$ADMIN_EMAIL" "$ADMIN_FIRST" "$ADMIN_LAST" admin
 
-asyncio.run(main())
-"
-
-echo ""
+echo
 echo "Pronto! Acesse o sistema e faça login."
