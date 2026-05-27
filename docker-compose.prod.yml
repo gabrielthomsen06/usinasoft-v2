@@ -12,8 +12,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     environment:
-      - DOMAIN=${DOMAIN}
-      - SSL_EMAIL=${SSL_EMAIL}
+      - DOMAIN=${DOMAIN:?DOMAIN is required in .env}
+      - SSL_EMAIL=${SSL_EMAIL:?SSL_EMAIL is required in .env (Let's Encrypt)}
     depends_on:
       - frontend
     networks:
@@ -25,9 +25,9 @@ services:
     image: postgres:15-alpine
     container_name: usinasoft_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -47,10 +47,10 @@ services:
     container_name: usinasoft_backend
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required in .env (min 32 chars)}
       - CORS_ORIGINS=["https://${DOMAIN}","http://${DOMAIN}"]
       - DEBUG=${DEBUG:-false}
-      - EMPRESA_CNPJ=${EMPRESA_CNPJ}
+      - EMPRESA_CNPJ=${EMPRESA_CNPJ:?EMPRESA_CNPJ is required in .env (14 digits)}
     depends_on:
       db:
         condition: service_healthy
