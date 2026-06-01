@@ -1,7 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from typing import Any, Optional
 
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -53,5 +54,5 @@ def verify_token(token: str, token_type: str = "access") -> Optional[str]:
             return None
         subject: Optional[str] = payload.get("sub")
         return subject
-    except JWTError:
+    except InvalidTokenError:
         return None
