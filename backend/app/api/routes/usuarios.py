@@ -38,7 +38,7 @@ async def list_all_usuarios(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
-    _: Usuario = Depends(get_current_active_user),
+    _: Usuario = Depends(get_current_admin_user),
 ) -> List[Usuario]:
     return await list_usuarios(db, skip=skip, limit=limit)
 
@@ -47,7 +47,7 @@ async def list_all_usuarios(
 async def get_usuario(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: Usuario = Depends(get_current_active_user),
+    _: Usuario = Depends(get_current_admin_user),
 ) -> Usuario:
     return await get_usuario_by_id(db, user_id)
 
